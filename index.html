@@ -301,6 +301,7 @@ button,a{touch-action:manipulation}
 .btn-film.big{padding:13px 4px;font-size:17px;border-color:#3a4b62}
 .btn-film.big span{font-size:11.5px;letter-spacing:.14em;color:var(--ink)}
 
+.rescode{margin-top:5px;font-size:10px;letter-spacing:.14em;color:var(--dim);opacity:.8}
 .record{margin-top:8px;font-size:10.5px;letter-spacing:.10em;color:var(--dim)}
 .record.new{color:var(--gold)}
 .btn-share.accent{border-color:rgba(171,0,0,.5);background:rgba(171,0,0,.10)}
@@ -472,6 +473,7 @@ button,a{touch-action:manipulation}
         <div class="stat"><span id="st-clears">0</span><i data-i18n="clears"></i></div>
       </div>
       <div class="record" id="st-record"></div>
+      <div class="rescode" id="st-code"></div>
     </div>
 
     <button id="btn-contest" class="btn-main btn-prize" data-i18n="join"></button>
@@ -795,6 +797,9 @@ var SRC = {
   logo: 'assets/logo.webp',
   reldate: 'assets/release_date.webp',
   qr: 'assets/qr.webp',
+  still_lamp: 'assets/stills/still_lamp.webp',
+  still_bus: 'assets/stills/still_bus.webp',
+  still_village: 'assets/stills/still_village.webp',
   door: 'assets/door.webp',
   asan_side: 'assets/characters/asan_side.webp',
   asan_walk: 'assets/characters/asan_walk_strip.webp',
@@ -1688,6 +1693,7 @@ function endRun(reason) {
   } else {
     rec.textContent = ''; rec.className = 'record';
   }
+  $('#st-code').textContent = tr('code_label') + ' ' + resultCode();
   show('scr-over');
   preparePoster();
 }
@@ -1743,7 +1749,12 @@ function buildShareImage() {
   ctx.clearRect(0, 0, 1080, 1920);
   ctx.imageSmoothingEnabled = false;
 
-  drawCover(ctx, IMG['scene' + ((stats.level - 1) % SCENES.length)], 0, 0, 1080, 1920);
+  /* Фоном идёт настоящий кадр из фильма, а не игровой задник: так каждая
+     выложенная картинка показывает сам фильм, а не только игру. */
+  var STILLS = ['still_lamp', 'still_bus', 'still_village'];
+  var st = STILLS[(stats.level - 1) % STILLS.length];
+  drawCover(ctx, has(st) ? IMG[st] : IMG['scene' + ((stats.level - 1) % SCENES.length)],
+            0, 0, 1080, 1920);
   var g = ctx.createLinearGradient(0, 0, 0, 1920);
   g.addColorStop(0.00, 'rgba(5,8,14,.92)');
   g.addColorStop(0.28, 'rgba(5,8,14,.58)');
@@ -1781,7 +1792,7 @@ function buildShareImage() {
   setFont(ctx, '700 28px ' + F, 0);
 
   /* сцена поимки */
-  var GROUND = 1240;
+  var GROUND = 1214;
   var sh = ctx.createRadialGradient(540, GROUND, 40, 540, GROUND, 470);
   sh.addColorStop(0, 'rgba(0,0,0,.55)'); sh.addColorStop(1, 'rgba(0,0,0,0)');
   ctx.fillStyle = sh;
@@ -1796,16 +1807,24 @@ function buildShareImage() {
 
   /* призыв + аккаунт: в сторис работает отметка, а не QR —
      зритель смотрит её на своём же телефоне и сканировать ему нечем */
-  ruleLine(ctx, 1286, 620);
-  ctx.fillStyle = '#E8B84B'; setFont(ctx, '700 34px ' + F, 2);
-  ctx.fillText(tr('p_win'), 540, 1340);
-  ctx.fillStyle = '#ffffff'; setFont(ctx, '700 46px ' + F, 1);
-  ctx.fillText('@' + INSTA, 540, 1404);
-  setFont(ctx, '400 27px ' + F, 0);
+  ruleLine(ctx, 1256, 620);
+  ctx.fillStyle = '#E8B84B'; setFont(ctx, '700 36px ' + F, 2);
+  ctx.fillText(tr('p_win'), 540, 1312);
+  ctx.fillStyle = '#c3d0de'; setFont(ctx, '400 26px ' + F, 1);
+  ctx.fillText(tr('p_sub'), 540, 1352);
+  ctx.fillStyle = '#ffffff'; setFont(ctx, '700 44px ' + F, 1);
+  ctx.fillText('@' + INSTA, 540, 1412);
+  setFont(ctx, '400 26px ' + F, 0);
 
   /* дата выхода — ключевой промо-элемент, держим её крупной и внутри
      безопасной зоны сторис (до 1670 по вертикали) */
-  drawFit(ctx, IMG.reldate, 258, 1440, 564, 216);
+  drawFit(ctx, IMG.reldate, 290, 1436, 500, 176);
+
+  /* код результата — по нему проверяется счёт */
+  ctx.fillStyle = 'rgba(226,233,242,.55)';
+  setFont(ctx, '600 23px ' + F, 3);
+  ctx.fillText(tr('code_label') + '  ' + resultCode(), 540, 1648);
+  setFont(ctx, '600 23px ' + F, 0);
 
   /* QR — маленький, для пересылки картинки в мессенджерах */
   if (has('qr')) {
