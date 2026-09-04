@@ -550,7 +550,7 @@ button,a{touch-action:manipulation}
 var GAME_URL = 'https://izibizproduction.github.io/jez-kempir-game/';
 var RELEASE = 'в кино с 17 сентября';
 /* Ссылка на трейлер — меняется здесь одной строкой */
-var TRAILER_URL = 'https://www.youtube.com/watch?v=vcX3V1o5xE8&t=1s';
+var TRAILER_URL = 'https://youtu.be/TvhZlP6e59M';
 var ICON_SOUND = '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M5 9v6h3l4 4V5L8 9zM16 9a4 4 0 0 1 0 6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>';
 var ICON_MUTE = '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M5 9v6h3l4 4V5L8 9zM16 10l4 4M20 10l-4 4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>';
 var INSTA = 'jez_kempir_film';
@@ -614,13 +614,13 @@ var I18N = {
     join: 'ЗАБРАТЬ БИЛЕТ', again: 'ЕЩЁ РАЗ', copy: 'ТЕКСТ',
     code_label: 'КОД РЕЗУЛЬТАТА',
     contest_title: 'РОЗЫГРЫШ',
-    prize_name: 'ЗАКРЫТЫЙ ПОКАЗ ДО ПРЕМЬЕРЫ',
-    prize_sub: 'Два билета: итоги 10 и 14 сентября',
+    prize_name: 'ТРИ БИЛЕТА НА ЗАКРЫТЫЙ ПОКАЗ',
+    prize_sub: 'Приём заявок с 8 по 15 сентября',
     step1: 'Сохрани картинку с результатом',
     step2: 'Выложи её в сторис Instagram и отметь @jez_kempir_film',
     step3: 'Подпишись на аккаунт — так мы напишем победителю',
     save_img: 'СОХРАНИТЬ КАРТИНКУ', open_insta: 'ОТКРЫТЬ INSTAGRAM',
-    rules: 'Побеждает наибольший результат за раунд. Первый билет — итоги 10 сентября, второй — 14 сентября, оба в 20:00. Сторис должна быть открытой. Код результата на картинке подтверждает счёт. Фильм 18+, приз вручается совершеннолетним.',
+    rules: 'Заявки принимаем с 8 по 15 сентября. Итоги 15 сентября в 20:00: три лучших результата получают по билету на закрытый показ. Сторис должна быть открытой. Код результата на картинке подтверждает счёт — при равенстве очков победит тот, кто выложил раньше. Фильм 18+, приз вручается совершеннолетним.',
     tickets_title: 'ГДЕ СМОТРЕТЬ', tickets_online: 'Купить онлайн',
     tickets_offline: 'Билеты в кассах кинотеатра',
     tickets_note: 'Список кинотеатров пополняется. Если вашего города пока нет — следите за обновлениями в Instagram.',
@@ -647,13 +647,13 @@ var I18N = {
     join: 'БИЛЕТТИ АЛУУ', again: 'ДАГЫ БИР ЖОЛУ', copy: 'ТЕКСТ',
     code_label: 'ЖЫЙЫНТЫК КОДУ',
     contest_title: 'КОНКУРС',
-    prize_name: 'ПРЕМЬЕРАГА ЧЕЙИНКИ ЖАБЫК КӨРСӨТҮҮ',
-    prize_sub: 'Эки билет: жыйынтык 10 жана 14-сентябрда',
+    prize_name: 'ЖАБЫК КӨРСӨТҮҮГӨ ҮЧ БИЛЕТ',
+    prize_sub: '8-15-сентябрь аралыгында катышыңыз',
     step1: 'Жыйынтык сүрөтүн сактап ал',
     step2: 'Аны Instagram сторисине жайгаштырып, @jez_kempir_film белгиле',
     step3: 'Аккаунтка жазыл — жеңүүчүгө ошондон жазабыз',
     save_img: 'СҮРӨТТҮ САКТОО', open_insta: 'INSTAGRAM АЧУУ',
-    rules: 'Раунддагы эң жогорку упай жеңет. Биринчи билет — 10-сентябрда, экинчиси — 14-сентябрда, экөө тең саат 20:00дө. Сторис ачык болушу керек. Сүрөттөгү код упайды ырастайт. Тасма 18+, байгени бойго жеткендер алат.',
+    rules: 'Табыштамалар 8-сентябрдан 15-сентябрга чейин кабыл алынат. Жыйынтык 15-сентябрда саат 20:00дө: эң мыкты үч жыйынтык жабык көрсөтүүгө билет алат. Сторис ачык болушу керек. Сүрөттөгү код упайды ырастайт — упай тең болсо, эрте жайгаштырган жеңет. Тасма 18+, байгени бойго жеткендер алат.',
     tickets_title: 'КАЙДА КӨРҮҮ', tickets_online: 'Онлайн сатып алуу',
     tickets_offline: 'Кассадан билет',
     tickets_note: 'Кинотеатрлардын тизмеси толукталууда. Шаарыңыз жок болсо — Instagram аккаунтубузду ээрчиңиз.',
@@ -833,8 +833,8 @@ var IMG = {}, SPR = {};
 /* Кадры фильма для картинки результата: уже обрезаны под 1080x1920 на сборке
    по точке фокуса, поэтому лица не режутся. Грузим фоном после меню —
    в первую секунду они не нужны, а вместе весят 259 КБ. */
-var STILLS = ['night_bus', 'candles', 'child_night', 'children', 'woman_fear',
-              'lamp_desk', 'blood', 'lamp_women', 'bus_window', 'window_man'];
+var STILLS = ['witch_lantern', 'witch_room', 'man_militia', 'man_dark',
+              'woman_close', 'woman_snow', 'cop', 'crowd', 'landscape', 'night_bus'];
 function loadStills() {
   STILLS.forEach(function (n) {
     if (IMG[n]) return;
