@@ -1,0 +1,2036 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0a0e14">
+<title>Побег от Жез Кемпир</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+/* ==========  ПОБЕГ ОТ ЖЕЗ КЕМПИР  ==========
+   Тёмная зимняя палитра. Вертикальный телефонный макет,
+   на десктопе — рамка с телефонными пропорциями по центру. */
+/* Палитра взята из брендбука фильма (JK_bloggers_prompt_for_claude_design.md).
+   Красный #AB0000 — официальный цвет релиза, он основной акцент.
+   Золото по брендбуку редкое: оставлено только для очков. */
+:root{
+  --ink:#E2E9F2; --dim:#6F7983; --gold:#E8B84B;
+  --blood:#AB0000; --blood-hot:#C0392B; --danger:#AB0000;
+  --surface:#070F17; --raised:#212630; --hairline:#2A313C;
+  --cell:52px; --gap:4px; --shake:0px; --dread:0;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:#05070a}
+body{
+  font-family:"Inter","Segoe UI",system-ui,sans-serif;color:var(--ink);
+  -webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;
+  touch-action:none;overscroll-behavior:none;
+  -webkit-text-size-adjust:100%;text-size-adjust:100%;
+}
+img{display:block;-webkit-user-drag:none}
+img,#board,.actor{image-rendering:pixelated;image-rendering:crisp-edges}
+
+#app{
+  position:fixed;inset:0;margin:auto;width:100%;height:100%;
+  background:linear-gradient(180deg,#050406 0%,#070F17 55%,#050406 100%);
+  overflow:hidden;
+}
+/* на десктопе — телефонная рамка по центру, а не полоса во всю высоту окна */
+@media (min-width:520px){
+  body{background:radial-gradient(ellipse at 50% -10%,#111a25 0%,#05070a 70%)}
+  #app{
+    width:min(480px,56vh);height:min(100vh,calc(min(480px,56vh) * 1.85));
+    border-radius:24px;
+    box-shadow:0 0 0 1px #1d2836,0 0 0 9px #0b1119,0 26px 70px rgba(0,0,0,.85);
+  }
+}
+
+.screen{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;
+  padding:12px 14px max(16px,env(safe-area-inset-bottom))}
+.screen.active{display:flex}
+
+/* ---------- лого и дата: всегда рядом с содержимым, а не по краям ---------- */
+.logo{width:min(72%,290px);height:auto;filter:drop-shadow(0 3px 10px rgba(0,0,0,.7))}
+.logo.small{width:min(56%,215px)}
+.reldate{width:min(64%,255px);height:auto;filter:drop-shadow(0 2px 8px rgba(0,0,0,.8))}
+
+/* ---------- загрузка ---------- */
+#scr-load{justify-content:center;gap:18px}
+.loadbox{width:100%;max-width:260px;text-align:center}
+.loadbar{height:5px;background:#1e2836;border-radius:5px;overflow:hidden}
+.loadbar i{display:block;height:100%;width:0;background:var(--blood-hot);transition:width .15s}
+.loadpct{margin-top:9px;font-size:11px;letter-spacing:.2em;color:var(--dim)}
+
+/* ---------- меню: единый блок по центру ---------- */
+#scr-menu{justify-content:center;padding-top:34px}
+.tagline{text-align:center;margin:10px 0 12px}
+.tagline b{
+  display:block;font-size:13px;font-weight:700;letter-spacing:.14em;color:var(--danger);
+  text-shadow:0 0 18px rgba(192,57,43,.45)
+}
+.tagline i{
+  display:block;margin-top:6px;font-style:normal;font-size:11px;line-height:1.5;color:var(--dim)
+}
+.tagline i em{font-style:normal;color:var(--blood-hot)}
+
+.picker{display:flex;gap:12px;width:100%;justify-content:center;flex:0 1 auto;min-height:0;height:min(32vh,236px);margin-top:10px}
+.pick{
+  flex:1 1 0;max-width:165px;min-height:0;display:flex;flex-direction:column;align-items:center;gap:6px;
+  background:rgba(19,27,38,.85);border:2px solid #22303f;border-radius:14px;
+  padding:8px 6px;color:var(--dim);font:inherit;
+  transition:border-color .15s,color .15s,background .15s;
+}
+.pick.selected{border-color:var(--blood-hot);color:var(--blood-hot);background:rgba(171,0,0,.10)}
+.pick-name{flex:0 0 auto;font-size:13px;letter-spacing:.18em}
+.pick-art{flex:1 1 auto;min-height:0;display:flex;align-items:flex-end;justify-content:center;width:100%}
+.pick-art img{height:100%;width:100%;object-fit:contain;object-position:bottom center;
+  filter:drop-shadow(0 6px 10px rgba(0,0,0,.6))}
+
+button,a{touch-action:manipulation}
+/* Антиква в капсе — как на официальном ассете даты и на постере */
+.verdict,.score-big,.prize b,.sheet-head,.city h4,.age,#toast,.btn-main{
+  font-family:"Cormorant Garamond","PT Serif",Georgia,serif;
+}
+.btn-main{
+  flex:0 0 auto;margin-top:14px;width:100%;max-width:290px;padding:13px 0;
+  border:0;border-radius:12px;background:var(--blood);color:#fff;
+  font:inherit;font-size:16px;font-weight:700;letter-spacing:.20em;box-shadow:0 6px 0 #6b0000;
+}
+.btn-main:active{transform:translateY(3px);box-shadow:0 3px 0 #7d2519}
+#scr-menu .reldate{margin-top:16px}
+
+/* ---------- игра ---------- */
+#scr-game{padding:0}
+#hud{
+  flex:0 0 auto;width:100%;height:44px;display:flex;align-items:center;
+  justify-content:space-between;gap:8px;padding:0 8px;
+  background:rgba(5,7,10,.78);border-bottom:1px solid #1b2634;z-index:6;
+}
+.hud-btn{flex:0 0 auto;width:34px;height:34px;border:0;border-radius:9px;
+  background:rgba(255,255,255,.07);color:var(--ink);font-size:15px;line-height:1}
+.hud-btn:active{background:rgba(255,255,255,.16)}
+.hud-btn.off{opacity:.4}
+#hud-level{font-size:12px;letter-spacing:.22em;color:var(--dim)}
+
+#stage{
+  position:relative;flex:1 1 auto;width:100%;min-height:0;
+  display:flex;flex-direction:column;align-items:center;
+  padding-bottom:8px;                 /* padding, а не margin — без схлопывания */
+  overflow:hidden;transform:translate(var(--shake),0);
+}
+#stage-bg{position:absolute;inset:0;z-index:0;background-position:center top;
+  background-size:cover;background-repeat:no-repeat}
+#stage-shade{position:absolute;inset:0;z-index:1;
+  background:linear-gradient(180deg,rgba(5,8,14,.40) 0%,rgba(5,8,14,.55) 38%,rgba(5,8,14,.74) 100%)}
+#road-zone{position:relative;flex:1 1 auto;width:100%;min-height:92px;z-index:2;padding:8px 10px}
+.logo-play{width:min(50%,185px);height:auto;opacity:.95;
+  filter:drop-shadow(0 2px 7px rgba(0,0,0,.95))}
+
+#board{
+  position:relative;z-index:3;display:grid;
+  gap:var(--gap);padding:var(--gap);
+  background:rgba(6,10,16,.42);border:1px solid rgba(171,0,0,.20);border-radius:12px;
+  box-shadow:inset 0 10px 30px rgba(0,0,0,.55);
+}
+.cell{position:relative;width:var(--cell);height:var(--cell);border-radius:8px;
+  background:rgba(255,255,255,.035);box-shadow:inset 0 0 0 1px rgba(255,255,255,.04)}
+.cell.next{background:rgba(226,233,242,.035)}
+.cell.empty{background:rgba(0,0,0,.30);box-shadow:inset 0 0 0 1px rgba(226,233,242,.07)}
+/* коридор, по которому ребёнок уже может пройти */
+.cell.empty.path{background:rgba(171,0,0,.20);
+  box-shadow:inset 0 0 0 1px rgba(171,0,0,.42),inset 0 0 12px rgba(171,0,0,.14)}
+.cell.door{background:rgba(171,0,0,.12);box-shadow:inset 0 0 0 1px rgba(171,0,0,.5)}
+.cell.entry{background:rgba(192,57,43,.10);box-shadow:inset 0 0 0 1px rgba(192,57,43,.45)}
+/* пара, которую надо поменять местами: подсвечены ОБЕ клетки */
+.cell.hint{animation:hintpulse 1s ease-in-out infinite;z-index:2}
+.cell.hint::after{
+  content:'';position:absolute;inset:-3px;border-radius:10px;pointer-events:none;
+  border:2px solid rgba(171,0,0,.9)
+}
+@keyframes hintpulse{
+  0%,100%{transform:scale(1);filter:brightness(1)}
+  50%{transform:scale(1.08);filter:brightness(1.35)}
+}
+.cell img{width:100%;height:100%;object-fit:contain;pointer-events:none}
+.cell.pop img{animation:pop .18s ease-in forwards}
+/* блок на пути ребёнка осыпается после каждой сборки */
+.cell.crumble img{animation:crumble .2s ease-in forwards}
+.cell.crumble{box-shadow:inset 0 0 0 2px rgba(171,0,0,.8),0 0 16px rgba(171,0,0,.4)}
+@keyframes crumble{
+  0%{transform:translate(0,0) scale(1);filter:brightness(2.2)}
+  30%{transform:translate(-3px,1px) scale(1.05)}
+  60%{transform:translate(3px,2px) scale(.85);opacity:.7}
+  100%{transform:translate(0,10px) scale(.4) rotate(-12deg);opacity:0}
+}
+.cell.bad{animation:shake .22s}
+@keyframes pop{to{transform:scale(.15) rotate(18deg);opacity:0}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}
+  50%{transform:translateX(5px)}75%{transform:translateX(-3px)}}
+
+#actors{position:absolute;inset:0;z-index:4;pointer-events:none}
+.actor{position:absolute;left:0;top:0;background-repeat:no-repeat;transform-origin:50% 100%;
+  filter:drop-shadow(0 4px 6px rgba(0,0,0,.7));will-change:transform}
+#witch{filter:drop-shadow(0 0 10px rgba(192,57,43,.55)) drop-shadow(0 4px 6px rgba(0,0,0,.8))}
+
+#danger{position:absolute;inset:0;z-index:5;pointer-events:none;opacity:var(--dread);
+  background:radial-gradient(ellipse at 50% 55%,rgba(192,57,43,0) 32%,rgba(192,57,43,.55) 100%);
+  transition:opacity .15s linear}
+
+#game-foot{flex:0 0 auto;width:100%;display:flex;justify-content:center;align-items:center;
+  padding:6px 0 max(4px,env(safe-area-inset-bottom));background:rgba(5,7,10,.55)}
+.reldate-foot{width:min(50%,192px);height:auto;opacity:.95;
+  filter:drop-shadow(0 2px 6px rgba(0,0,0,.9))}
+
+#toast{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);z-index:9;
+  pointer-events:none;opacity:0;font-size:24px;font-weight:700;letter-spacing:.14em;
+  color:var(--blood-hot);text-shadow:0 3px 0 #000,0 0 22px rgba(171,0,0,.6);text-align:center}
+#toast.show{animation:toast 1.15s ease-out}
+@keyframes toast{0%{opacity:0;transform:translate(-50%,-30%) scale(.7)}
+  22%{opacity:1;transform:translate(-50%,-50%) scale(1.06)}75%{opacity:1}
+  100%{opacity:0;transform:translate(-50%,-62%) scale(1)}}
+
+/* ---------- скример ---------- */
+#scr-catch{padding:0;background:#000;justify-content:center}
+/* object-position держит глаза в кадре: cover обрезает по высоте */
+#catch-face{width:100%;height:100%;object-fit:cover;object-position:center 28%;
+  animation:scare 1.15s steps(1,end) forwards}
+/* резкий рубленый монтаж: чёрное — кадр — чёрное — кадр, потом медленный наезд */
+/* translateY держит лицо в центре: на арте оно выше середины кадра */
+@keyframes scare{
+  0%  {opacity:0;transform:scale(1.18) translateY(6%)}
+  4%  {opacity:1;transform:scale(1.18) translateY(6%);filter:contrast(1.45) brightness(1.25)}
+  9%  {opacity:0}
+  13% {opacity:1;transform:scale(1.22) translate(-9px,6%);filter:contrast(1.3)}
+  18% {opacity:0}
+  22% {opacity:1;transform:scale(1.25) translate(8px,6%);filter:contrast(1.18)}
+  30% {transform:scale(1.28) translate(-6px,6%)}
+  40% {transform:scale(1.31) translate(5px,6%)}
+  55% {transform:scale(1.35) translate(-4px,6%)}
+  100%{opacity:1;transform:scale(1.46) translateY(6%);filter:contrast(1.05) brightness(.74)}
+}
+#catch-vig{position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse at 50% 45%,rgba(0,0,0,0) 34%,rgba(0,0,0,.8) 100%)}
+
+/* ---------- результат ---------- */
+#scr-over{justify-content:center}
+.verdict{flex:0 0 auto;margin-top:8px;font-size:13px;letter-spacing:.16em;color:var(--danger)}
+.verdict.win{color:var(--blood-hot)}
+.score-block{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;margin-top:8px}
+.stat-level{font-size:11px;letter-spacing:.20em;color:var(--dim)}
+.stat-level b{color:var(--ink);font-size:15px}
+.score-big{margin-top:2px;font-size:clamp(42px,14vw,64px);font-weight:700;line-height:1;
+  color:var(--gold);text-shadow:0 4px 0 #000,0 0 26px rgba(232,184,75,.35)}
+.score-cap{font-size:10px;letter-spacing:.34em;color:var(--dim);margin-top:3px}
+.stat-row{display:flex;gap:28px;margin-top:10px}
+.stat{display:flex;flex-direction:column;align-items:center;gap:3px}
+.stat span{font-size:19px;color:var(--ink)}
+.stat i{font-style:normal;font-size:9px;letter-spacing:.18em;color:var(--dim)}
+/* приз — главный смысл экрана: через него разыгрываются билеты */
+.prize{
+  flex:0 0 auto;margin-top:14px;width:100%;max-width:320px;text-align:center;
+  padding:11px 12px 12px;border-radius:14px;
+  border:1px solid rgba(171,0,0,.45);
+  background:linear-gradient(180deg,rgba(171,0,0,.14),rgba(171,0,0,.04));
+}
+.prize b{display:block;font-size:13px;line-height:1.35;letter-spacing:.10em;color:var(--blood-hot);
+  text-shadow:0 0 18px rgba(171,0,0,.35)}
+.prize i{display:block;margin-top:5px;font-style:normal;font-size:10px;line-height:1.4;color:var(--dim)}
+
+.share-row{flex:0 0 auto;display:flex;gap:7px;margin-top:10px;width:100%;max-width:330px}
+.btn-share{flex:1 1 0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:4px;padding:8px 2px;border:1px solid #263446;border-radius:11px;
+  background:rgba(19,27,38,.9);color:var(--ink);font:inherit;font-size:17px}
+.btn-share:active{background:rgba(171,0,0,.15);border-color:var(--blood-hot)}
+.btn-share i{font-style:normal;font-size:10.5px;line-height:1.2;letter-spacing:.05em;
+  color:var(--dim);text-align:center}
+#scr-over .btn-main{margin-top:10px;font-size:15px;padding:13px 0}
+.btn-prize{
+  background:linear-gradient(180deg,#C0392B,#AB0000);
+  box-shadow:0 6px 0 #6b0000,0 0 26px rgba(216,69,47,.35);
+  animation:prizepulse 2.4s ease-in-out infinite;
+}
+@keyframes prizepulse{
+  0%,100%{box-shadow:0 6px 0 #6b0000,0 0 22px rgba(216,69,47,.30)}
+  50%{box-shadow:0 6px 0 #6b0000,0 0 34px rgba(171,0,0,.45)}
+}
+#scr-over .reldate{margin-top:4px;width:min(52%,200px)}
+
+/* ---------- снег ---------- */
+#snow{position:absolute;inset:0;z-index:50;pointer-events:none;overflow:hidden}
+.flake{position:absolute;top:-12px;border-radius:50%;background:#fff;opacity:.7;
+  animation:fall linear infinite}
+@keyframes fall{0%{transform:translate3d(0,-14px,0);opacity:0}10%{opacity:.75}
+  100%{transform:translate3d(var(--dx),108vh,0);opacity:.15}}
+
+
+/* ---------- выбор языка ---------- */
+.langbar{position:absolute;top:10px;right:12px;display:flex;gap:4px;z-index:8}
+.lang{
+  padding:4px 8px;border:1px solid #26364a;border-radius:8px;
+  background:rgba(19,27,38,.85);color:var(--dim);font:inherit;font-size:10px;letter-spacing:.08em;
+}
+.lang.on{border-color:var(--blood-hot);color:var(--blood-hot);background:rgba(171,0,0,.12)}
+
+/* ---------- логлайн и отсчёт ---------- */
+.countdown{
+  flex:0 0 auto;margin:10px 0 2px;font-size:11px;letter-spacing:.18em;color:var(--danger);
+  text-shadow:0 0 16px rgba(192,57,43,.45)
+}
+.countdown.big{font-size:13px;margin:2px 0 14px}
+.logline{
+  flex:0 0 auto;margin:9px 2px 0;max-width:340px;text-align:center;
+  font-size:11px;line-height:1.5;color:#a9b8c9
+}
+.howto{
+  flex:0 0 auto;margin:9px 0 0;max-width:320px;text-align:center;
+  font-size:10.5px;line-height:1.45;color:var(--dim)
+}
+
+/* ---------- кнопки «о фильме» ---------- */
+.filmrow{flex:0 0 auto;display:flex;gap:7px;margin-top:11px;width:100%;max-width:330px}
+.bigrow{flex:0 0 auto;display:flex;gap:9px;margin-top:9px;width:100%;max-width:330px}
+.btn-film{
+  flex:1 1 0;display:flex;align-items:center;justify-content:center;gap:6px;
+  padding:9px 4px;border:1px solid #2b3c52;border-radius:11px;
+  background:rgba(19,27,38,.9);color:var(--ink);font:inherit;font-size:13px;
+}
+.btn-film span{font-size:10px;letter-spacing:.10em;color:var(--dim)}
+.btn-film:active{background:rgba(171,0,0,.14);border-color:var(--blood-hot)}
+.btn-film.big{padding:13px 4px;font-size:17px;border-color:#3a4b62}
+.btn-film.big span{font-size:11.5px;letter-spacing:.14em;color:var(--ink)}
+
+.record{margin-top:8px;font-size:10.5px;letter-spacing:.10em;color:var(--dim)}
+.record.new{color:var(--gold)}
+.btn-share.accent{border-color:rgba(171,0,0,.5);background:rgba(171,0,0,.10)}
+.btn-share.accent i{color:var(--blood-hot)}
+
+/* ---------- выезжающие экраны: розыгрыш и билеты ---------- */
+.screen.sheet{padding:0;justify-content:flex-start}
+.sheet-head{
+  flex:0 0 auto;width:100%;height:48px;display:flex;align-items:center;gap:6px;
+  padding:0 10px;background:rgba(5,7,10,.9);border-bottom:1px solid #1b2634;
+  font-size:12px;letter-spacing:.20em;color:var(--blood-hot)
+}
+.back{
+  width:34px;height:34px;flex:0 0 auto;border:0;border-radius:9px;
+  background:rgba(255,255,255,.07);color:var(--ink);font:inherit;font-size:22px;line-height:1
+}
+.sheet-body{
+  flex:1 1 auto;width:100%;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  padding:14px 16px 24px;display:flex;flex-direction:column;align-items:center
+}
+.steps{list-style:none;width:100%;max-width:330px;margin:14px 0 4px}
+.steps li{display:flex;gap:10px;align-items:flex-start;margin-bottom:11px}
+.steps b{
+  flex:0 0 auto;width:22px;height:22px;border-radius:50%;
+  background:var(--blood);color:#fff;font-size:12px;line-height:22px;text-align:center
+}
+.steps span{font-size:12px;line-height:1.45;color:var(--ink)}
+.rules{
+  margin-top:14px;max-width:330px;text-align:center;
+  font-size:10.5px;line-height:1.55;color:var(--dim)
+}
+.btn-ghost{
+  background:transparent;border:1px solid var(--blood-hot);color:var(--blood-hot);
+  box-shadow:none;margin-top:9px
+}
+.btn-ghost:active{background:rgba(171,0,0,.14);box-shadow:none;transform:translateY(2px)}
+#scr-contest .btn-main,#scr-tickets .btn-main{width:100%;max-width:330px}
+
+.city{width:100%;max-width:340px;margin-bottom:16px}
+.city h4{font-size:13px;letter-spacing:.16em;color:var(--blood-hot);margin-bottom:7px}
+.cgroup{font-size:11px;letter-spacing:.14em;color:var(--dim);margin:9px 0 5px}
+.cin{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 12px;margin-bottom:6px;border-radius:10px;
+  background:rgba(19,27,38,.85);border:1px solid #22303f;
+  font-size:12.5px;color:var(--dim);text-decoration:none
+}
+.cin.online{color:var(--ink);border-color:#2b3c52}
+.cin i{font-style:normal;color:var(--blood-hot)}
+
+.age{
+  flex:0 0 auto;margin-top:8px;padding:2px 9px;border-radius:20px;
+  border:1px solid var(--hairline);color:var(--dim);
+  font-size:12px;letter-spacing:.08em
+}
+.pick-age{flex:0 0 auto;font-size:10px;letter-spacing:.12em;color:var(--dim);margin-top:-2px}
+/* язык — крупно и словами, а не кодами */
+.langbar{position:absolute;top:10px;right:12px;left:12px;display:flex;gap:6px;z-index:8}
+.lang{
+  flex:1 1 0;padding:8px 0;border:1px solid var(--hairline);border-radius:10px;
+  background:rgba(7,15,23,.85);color:var(--dim);
+  font:inherit;font-size:11px;letter-spacing:.14em
+}
+.lang.on{border-color:var(--blood);color:#fff;background:rgba(171,0,0,.18)}
+#scr-menu{padding-top:52px}
+#sharecv{display:none}
+
+@media (max-height:680px){
+  .logo{width:min(68%,265px)}
+  .reldate{width:min(54%,210px)}
+  .tagline i{display:none}
+  .picker{height:min(26vh,190px)}
+  #over-hero{max-height:18vh}
+}
+</style>
+</head>
+<body>
+
+<div id="app">
+
+  <section id="scr-load" class="screen active">
+    <img class="logo" src="assets/logo.webp" alt="Жез Кемпир">
+    <div class="loadbox">
+      <div class="loadbar"><i id="loadfill"></i></div>
+      <div class="loadpct" id="loadpct">0%</div>
+    </div>
+    <img class="reldate" src="assets/release_date.webp" alt="Дата выхода">
+  </section>
+
+  <!-- ================= МЕНЮ ================= -->
+  <section id="scr-menu" class="screen">
+    <div class="langbar">
+      <button class="lang" data-lang="ky">КЫРГЫЗЧА</button>
+      <button class="lang" data-lang="ru">РУССКИЙ</button>
+    </div>
+
+    <img class="logo" src="assets/logo.webp" alt="Жез Кемпир">
+    <div class="countdown" data-i18n="countdown"></div>
+    <p class="logline" data-i18n="logline"></p>
+
+    <div class="picker">
+      <button class="pick selected" data-hero="asan">
+        <span class="pick-name" data-i18n="hero_asan"></span>
+        <span class="pick-age" data-i18n="hero_asan_age"></span>
+        <span class="pick-art"><img src="assets/characters/asan_front.webp" alt="Асан"></span>
+      </button>
+      <button class="pick" data-hero="asel">
+        <span class="pick-name" data-i18n="hero_asel"></span>
+        <span class="pick-age" data-i18n="hero_asel_age"></span>
+        <span class="pick-art"><img src="assets/characters/asel_front.webp" alt="Асель"></span>
+      </button>
+    </div>
+
+    <div class="howto" data-i18n="howto"></div>
+    <button id="btn-run" class="btn-main" data-i18n="run"></button>
+
+    <div class="filmrow">
+      <button class="btn-film" id="m-trailer"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M8 5v14l11-7z" fill="currentColor"/></svg><span data-i18n="trailer"></span></button>
+      <button class="btn-film" id="m-tickets"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M3 8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4z" fill="none" stroke="currentColor" stroke-width="1.6"/></svg><span data-i18n="tickets"></span></button>
+      <button class="btn-film" id="m-insta"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="17.2" cy="6.8" r="1.2" fill="currentColor"/></svg><span>Instagram</span></button>
+    </div>
+
+    <img class="reldate" src="assets/release_date.webp" alt="Дата выхода">
+    <div class="age">18+</div>
+  </section>
+
+  <!-- ================= ИГРА ================= -->
+  <section id="scr-game" class="screen">
+    <div id="hud">
+      <button id="btn-close" class="hud-btn" aria-label="Выход">✕</button>
+      <div id="hud-level">1</div>
+      <button id="btn-sound" class="hud-btn" aria-label="Звук"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M5 9v6h3l4 4V5L8 9zM16 9a4 4 0 0 1 0 6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg></button>
+    </div>
+    <div id="stage">
+      <div id="stage-bg"></div>
+      <div id="stage-shade"></div>
+      <div id="road-zone">
+        <img class="logo-play" src="assets/logo.webp" alt="Жез Кемпир">
+      </div>
+      <div id="board"></div>
+      <div id="actors">
+        <div id="witch" class="actor"></div>
+        <div id="child" class="actor"></div>
+      </div>
+      <div id="danger"></div>
+    </div>
+    <div id="game-foot">
+      <img class="reldate-foot" src="assets/release_date.webp" alt="Дата выхода">
+    </div>
+    <div id="toast"></div>
+  </section>
+
+  <section id="scr-catch" class="screen">
+    <img id="catch-face" alt="">
+    <div id="catch-vig"></div>
+  </section>
+
+  <!-- ================= РЕЗУЛЬТАТ ================= -->
+  <section id="scr-over" class="screen">
+    <img class="logo small" src="assets/logo.webp" alt="Жез Кемпир">
+    <div id="over-verdict" class="verdict"></div>
+
+    <div class="score-block">
+      <div class="stat-level"><span data-i18n="level"></span> <b id="st-level">1</b></div>
+      <div class="score-big" id="st-score">0</div>
+      <div class="score-cap" data-i18n="points"></div>
+      <div class="stat-row">
+        <div class="stat"><span id="st-time">0:00</span><i data-i18n="time"></i></div>
+        <div class="stat"><span id="st-clears">0</span><i data-i18n="clears"></i></div>
+      </div>
+      <div class="record" id="st-record"></div>
+    </div>
+
+    <button id="btn-contest" class="btn-main btn-prize" data-i18n="join"></button>
+
+    <div class="bigrow">
+      <button class="btn-film big" id="o-trailer"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M8 5v14l11-7z" fill="currentColor"/></svg><span data-i18n="trailer"></span></button>
+      <button class="btn-film big" id="o-tickets"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M3 8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4z" fill="none" stroke="currentColor" stroke-width="1.6"/></svg><span data-i18n="tickets"></span></button>
+    </div>
+
+    <div class="share-row">
+      <button class="btn-share" id="btn-insta"><svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="17.2" cy="6.8" r="1.2" fill="currentColor"/></svg><i>Instagram</i></button>
+      <button class="btn-share" id="btn-tg"><svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><path d="M21 4 3 11l5 2 2 6 3-4 5 4z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg><i>Telegram</i></button>
+      <button class="btn-share" id="btn-copy"><svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><rect x="8" y="4" width="12" height="15" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M16 4V3a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v13a1 1 0 0 0 1 1h1" fill="none" stroke="currentColor" stroke-width="1.6"/></svg><i data-i18n="copy"></i></button>
+      <button class="btn-share accent" id="btn-again"><svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.6-5.9M20 4v5h-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><i data-i18n="again"></i></button>
+    </div>
+
+    <div class="countdown" data-i18n="countdown"></div>
+    <img class="reldate small" src="assets/release_date.webp" alt="Дата выхода">
+  </section>
+
+  <!-- ================= РОЗЫГРЫШ ================= -->
+  <section id="scr-contest" class="screen sheet">
+    <div class="sheet-head">
+      <button class="back" data-back="1">‹</button>
+      <span data-i18n="contest_title"></span>
+    </div>
+    <div class="sheet-body">
+      <div class="prize">
+        <b data-i18n="prize_name"></b>
+        <i data-i18n="prize_sub"></i>
+      </div>
+
+      <ol class="steps">
+        <li><b>1</b><span data-i18n="step1"></span></li>
+        <li><b>2</b><span data-i18n="step2"></span></li>
+        <li><b>3</b><span data-i18n="step3"></span></li>
+      </ol>
+
+      <button id="c-save" class="btn-main btn-prize" data-i18n="save_img"></button>
+      <button id="c-insta" class="btn-main btn-ghost" data-i18n="open_insta"></button>
+
+      <div class="rules" data-i18n="rules"></div>
+    </div>
+  </section>
+
+  <!-- ================= БИЛЕТЫ ================= -->
+  <section id="scr-tickets" class="screen sheet">
+    <div class="sheet-head">
+      <button class="back" data-back="1">‹</button>
+      <span data-i18n="tickets_title"></span>
+    </div>
+    <div class="sheet-body">
+      <div class="countdown big" data-i18n="countdown"></div>
+      <div id="cinema-list"></div>
+      <div class="rules" data-i18n="tickets_note"></div>
+    </div>
+  </section>
+
+  <div id="snow"></div>
+</div>
+
+<audio id="music" loop preload="none" src="assets/audio/music.m4a"></audio>
+<canvas id="sharecv" width="1080" height="1920"></canvas>
+
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script>
+(function () {
+'use strict';
+
+/* ===== АДРЕС ИГРЫ =========================================================
+   Меняете здесь — и такой же адрес пропишите в tools/build_assets.py
+   (константа GAME_URL), затем запустите скрипт заново, чтобы перерисовался QR. */
+var GAME_URL = 'https://portfolio-heart-hydrogen-provisions.trycloudflare.com';
+var RELEASE = 'в кино с 17 сентября';
+/* Ссылка на трейлер — меняется здесь одной строкой */
+var TRAILER_URL = 'https://www.youtube.com/watch?v=vcX3V1o5xE8&t=1s';
+var ICON_SOUND = '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M5 9v6h3l4 4V5L8 9zM16 9a4 4 0 0 1 0 6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>';
+var ICON_MUTE = '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M5 9v6h3l4 4V5L8 9zM16 10l4 4M20 10l-4 4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>';
+var INSTA = 'jez_kempir_film';
+
+/* ===== КОД РЕЗУЛЬТАТА =====================================================
+   Печатается на картинке и позволяет проверить счёт без сервера: в коде
+   зашиты сами очки, уровень и число сборок плюс подпись. Если подправить
+   цифры на картинке, код перестанет сходиться.
+
+   ВАЖНО: ключ лежит в клиенте, потому что бэкенда нет. Это отсекает всех,
+   кто просто открыл бы картинку в редакторе, но не того, кто разберётся
+   в исходнике. Поэтому verify.html НЕ выкладывается в интернет, а у топ-3
+   стоит попросить видео забега.                                          */
+var SIGN_KEY = 'jk-2026-09-17-zhez';
+
+function sign36(payload) {
+  var h1 = 0x811c9dc5, h2 = 0x1000193, str = payload + '|' + SIGN_KEY;
+  for (var i = 0; i < str.length; i++) {
+    var c = str.charCodeAt(i);
+    h1 = ((h1 ^ c) * 0x01000193) >>> 0;
+    h2 = ((h2 + c * 0x9e3779b1) ^ (h2 << 5) ^ (h2 >>> 3)) >>> 0;
+  }
+  var v = ((h1 ^ h2) >>> 0).toString(36).toUpperCase();
+  while (v.length < 6) v = '0' + v;
+  return v.slice(0, 6);
+}
+function resultCode() {
+  var body = stats.score.toString(36).toUpperCase() + '.' +
+             stats.level.toString(36).toUpperCase() + '.' +
+             stats.clears.toString(36).toUpperCase();
+  var sig = sign36(body);
+  return (body + '.' + sig).toUpperCase();
+}
+var INSTA_URL = 'https://instagram.com/' + INSTA;
+/* ========================================================================= */
+
+
+/* ===== ЯЗЫКИ ==============================================================
+   ВНИМАНИЕ: кыргызский и казахский переводы сделаны без носителя языка.
+   Перед запуском обязательно дайте их вычитать — всё лежит в одном
+   объекте ниже, править можно прямо здесь.                            */
+var I18N = {
+  ru: {
+    logline: 'Зимой в отрезанном от мира кыргызском селе пропадает школьный автобус с двенадцатью детьми. Уцелевшие взрослые клянутся, что их забрала нечистая сила, и обезумевшая от горя толпа идёт за старухой-знахаркой, которую здесь давно шёпотом зовут жез кемпир. Но правда о той ночи страшнее любого проклятия.',
+    howto: 'Собирай тройки где угодно — каждая ломает блок на пути ребёнка',
+    run: 'БЕЖАТЬ', trailer: 'ТРЕЙЛЕР', tickets: 'БИЛЕТЫ', about: 'О ФИЛЬМЕ',
+    hero_asan: 'АСАН', hero_asan_age: '9 лет',
+    hero_asel: 'АСЕЛЬ', hero_asel_age: '7 лет',
+    level: 'УРОВЕНЬ', points: 'ОЧКОВ', time: 'ВРЕМЯ', clears: 'СБОРОК',
+    record: 'твой рекорд: ', newrecord: 'НОВЫЙ РЕКОРД',
+    to_record: 'до рекорда осталось ',
+    caught_m: 'ОНА ЗАБРАЛА ЕГО', caught_f: 'ОНА ЗАБРАЛА ЕЁ', quit: 'ЗАБЕГ ОКОНЧЕН',
+    join: 'ЗАБРАТЬ БИЛЕТ', again: 'ЕЩЁ РАЗ', copy: 'ТЕКСТ',
+    code_label: 'КОД РЕЗУЛЬТАТА',
+    contest_title: 'РОЗЫГРЫШ',
+    prize_name: 'ЗАКРЫТЫЙ ПОКАЗ ДО ПРЕМЬЕРЫ',
+    prize_sub: 'Два билета: итоги 10 и 14 сентября',
+    step1: 'Сохрани картинку с результатом',
+    step2: 'Выложи её в сторис Instagram и отметь @jez_kempir_film',
+    step3: 'Подпишись на аккаунт — так мы напишем победителю',
+    save_img: 'СОХРАНИТЬ КАРТИНКУ', open_insta: 'ОТКРЫТЬ INSTAGRAM',
+    rules: 'Побеждает наибольший результат за раунд. Первый билет — итоги 10 сентября, второй — 14 сентября, оба в 20:00. Сторис должна быть открытой. Код результата на картинке подтверждает счёт. Фильм 18+, приз вручается совершеннолетним.',
+    tickets_title: 'ГДЕ СМОТРЕТЬ', tickets_online: 'Купить онлайн',
+    tickets_offline: 'Билеты в кассах кинотеатра',
+    tickets_note: 'Список кинотеатров пополняется. Если вашего города пока нет — следите за обновлениями в Instagram.',
+    countdown_pre: 'ДО ПРЕМЬЕРЫ', countdown_days: ['ДЕНЬ', 'ДНЯ', 'ДНЕЙ'],
+    countdown_today: 'ПРЕМЬЕРА СЕГОДНЯ', countdown_now: 'УЖЕ В КИНО',
+    t_level: 'УРОВЕНЬ', t_combo: 'КОМБО x', t_entered: 'ОНА ВОШЛА',
+    t_escaped: 'УСПЕЛ', t_shuffle: 'ОБЕРЕГИ СМЕСТИЛИСЬ',
+    t_opened: 'ПРОХОД ОТКРЫЛСЯ', t_hint: 'БЫСТРЕЕ. ВОТ ЭТИ ДВА',
+    copied: 'СКОПИРОВАНО',
+    share: 'Жез Кемпир забрала её на {level} уровне — {score} очков.\nОбгони меня и забери билет на закрытый показ.\n\nИграть: {url}\nТрейлер: {trailer}\n\n«ЖЕЗ КЕМПИР» — в кино с 17 сентября. 18+',
+    p_win: 'ОБГОНИ МОЙ РЕЗУЛЬТАТ',
+    p_sub: 'и выиграй билет на закрытый показ'
+  },
+  ky: {
+    logline: 'Кышында сырткы дүйнө менен байланышы таптакыр үзүлгөн кыргыз айылында, ичинде 12 баласы бар мектеп автобусу дайынсыз жоголот. Аман калгандар балдарды кара күчтөр алып кетти деп какшашат. Кайгыдан акыл-эсин жоготкон эл, айылда эбактан бери эле өз ара шыбырашып «жез кемпир» атап жүргөн табып кемпирден өч алганы жөнөйт. Бирок ал түндүн чындыгы ар кандай каргыштан да коркунучтуу эле...',
+    howto: 'Каалаган жерден үчөөнү чогулт — ар бир жыйноо баланын жолундагы тосмону сындырат',
+    run: 'КАЧУУ', trailer: 'ТРЕЙЛЕР', tickets: 'БИЛЕТТЕР', about: 'ТАСМА ЖӨНҮНДӨ',
+    hero_asan: 'АСАН', hero_asan_age: '9 жашта',
+    hero_asel: 'АСЕЛЬ', hero_asel_age: '7 жашта',
+    level: 'ДЕҢГЭЭЛ', points: 'УПАЙ', time: 'УБАКЫТ', clears: 'ЖЫЙНОО',
+    record: 'рекордуң: ', newrecord: 'ЖАҢЫ РЕКОРД',
+    to_record: 'рекордго калды ',
+    caught_m: 'АЛ АНЫ АЛЫП КЕТТИ', caught_f: 'АЛ АНЫ АЛЫП КЕТТИ', quit: 'ОЮН БҮТТҮ',
+    join: 'БИЛЕТТИ АЛУУ', again: 'ДАГЫ БИР ЖОЛУ', copy: 'ТЕКСТ',
+    code_label: 'ЖЫЙЫНТЫК КОДУ',
+    contest_title: 'КОНКУРС',
+    prize_name: 'ПРЕМЬЕРАГА ЧЕЙИНКИ ЖАБЫК КӨРСӨТҮҮ',
+    prize_sub: 'Эки билет: жыйынтык 10 жана 14-сентябрда',
+    step1: 'Жыйынтык сүрөтүн сактап ал',
+    step2: 'Аны Instagram сторисине жайгаштырып, @jez_kempir_film белгиле',
+    step3: 'Аккаунтка жазыл — жеңүүчүгө ошондон жазабыз',
+    save_img: 'СҮРӨТТҮ САКТОО', open_insta: 'INSTAGRAM АЧУУ',
+    rules: 'Раунддагы эң жогорку упай жеңет. Биринчи билет — 10-сентябрда, экинчиси — 14-сентябрда, экөө тең саат 20:00дө. Сторис ачык болушу керек. Сүрөттөгү код упайды ырастайт. Тасма 18+, байгени бойго жеткендер алат.',
+    tickets_title: 'КАЙДА КӨРҮҮ', tickets_online: 'Онлайн сатып алуу',
+    tickets_offline: 'Кассадан билет',
+    tickets_note: 'Кинотеатрлардын тизмеси толукталууда. Шаарыңыз жок болсо — Instagram аккаунтубузду ээрчиңиз.',
+    countdown_pre: 'ПРЕМЬЕРАГА', countdown_days: ['КҮН', 'КҮН', 'КҮН'],
+    countdown_today: 'ПРЕМЬЕРА БҮГҮН', countdown_now: 'КИНОТЕАТРЛАРДА',
+    t_level: 'ДЕҢГЭЭЛ', t_combo: 'КОМБО x', t_entered: 'АЛ КИРДИ',
+    t_escaped: 'ҮЛГҮРДҮ', t_shuffle: 'ТУМАРЛАР ЖЫЛДЫ',
+    t_opened: 'ЖОЛ АЧЫЛДЫ', t_hint: 'ТЕЗИРЭЭК. УШУЛ ЭКӨӨ',
+    copied: 'КӨЧҮРҮЛДҮ',
+    share: 'Жез Кемпир аны {level}-деңгээлде алып кетти — {score} упай.\nМени озуп, жабык көрсөтүүгө билет утуп ал.\n\nОйноо: {url}\nТрейлер: {trailer}\n\n«ЖЕЗ КЕМПИР» — 17-сентябрдан баштап кинотеатрларда. 18+',
+    p_win: 'МЕНИН ЖЫЙЫНТЫГЫМДЫ ОЗУП ӨТ',
+    p_sub: 'жана жабык көрсөтүүгө билет утуп ал'
+  }
+};
+
+var lang = 'ru';
+function tr(k) { return (I18N[lang] && I18N[lang][k]) || I18N.ru[k] || ''; }
+
+/* Язык телефона: ru — русский, ky — кыргызский, kk — казахский.
+   Ручной выбор запоминается. */
+function detectLang() {
+  try {
+    var saved = localStorage.getItem('jk_lang');
+    if (saved && I18N[saved]) return saved;
+  } catch (e) {}
+  /* Фильм кыргызский, поэтому кыргызский — язык по умолчанию.
+     Русский показываем только тем, у кого телефон явно на русском. */
+  var list = navigator.languages || [navigator.language || 'ky'];
+  for (var i = 0; i < list.length; i++) {
+    var code = String(list[i]).toLowerCase();
+    if (code.indexOf('ky') === 0 || code.indexOf('kir') === 0) return 'ky';
+    if (code.indexOf('ru') === 0) return 'ru';
+  }
+  return 'ky';
+}
+function setLang(v) {
+  lang = I18N[v] ? v : 'ru';
+  try { localStorage.setItem('jk_lang', lang); } catch (e) {}
+  document.documentElement.lang = lang;
+  Array.prototype.forEach.call(document.querySelectorAll('[data-i18n]'), function (el) {
+    var k = el.getAttribute('data-i18n');
+    el.textContent = (k === 'countdown') ? countdownText() : tr(k);
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('.lang'), function (b) {
+    b.classList.toggle('on', b.getAttribute('data-lang') === lang);
+  });
+  renderCinemas();
+}
+
+/* ---------- обратный отсчёт до премьеры ---------- */
+var PREMIERE = new Date(2026, 8, 17);           // 17 сентября 2026
+function daysLeft() {
+  var now = new Date(), a = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  return Math.round((PREMIERE - a) / 86400000);
+}
+function plural(n, forms) {
+  var n10 = n % 10, n100 = n % 100;
+  if (n10 === 1 && n100 !== 11) return forms[0];
+  if (n10 >= 2 && n10 <= 4 && (n100 < 10 || n100 >= 20)) return forms[1];
+  return forms[2];
+}
+function countdownText() {
+  var d = daysLeft();
+  if (d < 0) return tr('countdown_now');
+  if (d === 0) return tr('countdown_today');
+  return tr('countdown_pre') + ' ' + d + ' ' + plural(d, tr('countdown_days'));
+}
+
+/* ---------- кинотеатры ----------------------------------------------------
+   ЗАГЛУШКА. Замените на реальные залы и ссылки, когда откроются продажи.
+   online — со ссылкой на страницу фильма, offline — только касса.        */
+var CINEMAS = [
+  { city: 'Бишкек',
+    online: [
+      { name: 'Cinematica — Vefa Center', url: 'https://example.kg/cinematica-vefa' },
+      { name: 'Cinematica — Bishkek Park', url: 'https://example.kg/cinematica-park' },
+      { name: 'Кинотеатр «Ала-Тоо»', url: 'https://example.kg/ala-too' }
+    ],
+    offline: ['Кинотеатр «Октябрь»', 'Кинотеатр «Россия»'] },
+  { city: 'Ош', online: [], offline: ['Кинотеатр «Ош»'] }
+];
+function renderCinemas() {
+  var box = document.getElementById('cinema-list');
+  if (!box) return;
+  var html = '';
+  CINEMAS.forEach(function (c) {
+    html += '<div class="city"><h4>' + c.city + '</h4>';
+    if (c.online && c.online.length) {
+      html += '<div class="cgroup">' + tr('tickets_online') + '</div>';
+      c.online.forEach(function (o) {
+        html += '<a class="cin online" href="' + o.url + '" target="_blank" rel="noopener">' +
+                o.name + '<i>&rarr;</i></a>';
+      });
+    }
+    if (c.offline && c.offline.length) {
+      html += '<div class="cgroup">' + tr('tickets_offline') + '</div>';
+      c.offline.forEach(function (o) { html += '<div class="cin">' + o + '</div>'; });
+    }
+    html += '</div>';
+  });
+  box.innerHTML = html;
+}
+
+var TG = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : null;
+if (TG) {
+  try {
+    TG.ready(); TG.expand();
+    if (TG.disableVerticalSwipes) TG.disableVerticalSwipes();
+    if (TG.setHeaderColor) TG.setHeaderColor('#0a0e14');
+    if (TG.setBackgroundColor) TG.setBackgroundColor('#0a0e14');
+  } catch (e) {}
+}
+document.addEventListener('touchmove', function (e) { e.preventDefault(); }, { passive: false });
+document.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+
+/* Полная блокировка зума. meta viewport с user-scalable=no Safari игнорирует
+   с iOS 10, поэтому глушим все три способа руками: жесты-щипки, двойной тап
+   и ctrl+колесо на десктопе. Иначе экран увеличивается без пути назад. */
+['gesturestart', 'gesturechange', 'gestureend'].forEach(function (g) {
+  document.addEventListener(g, function (e) { e.preventDefault(); }, { passive: false });
+});
+document.addEventListener('touchstart', function (e) {
+  if (e.touches.length > 1) e.preventDefault();
+}, { passive: false });
+document.addEventListener('dblclick', function (e) { e.preventDefault(); }, { passive: false });
+document.addEventListener('wheel', function (e) {
+  if (e.ctrlKey) e.preventDefault();
+}, { passive: false });
+var lastTapAt = 0;
+document.addEventListener('touchend', function (e) {
+  var now = Date.now();
+  if (now - lastTapAt < 320) e.preventDefault();   // второй тап двойного тапа
+  lastTapAt = now;
+}, { passive: false });
+
+function $(s) { return document.querySelector(s); }
+function wait(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+function clamp(v, a, b) { return v < a ? a : (v > b ? b : v); }
+
+/* ---------- поле ---------- */
+var COLS = 7, ROWS = 8;
+var ENTRY = { r: 0, c: 0 }, DOOR = { r: ROWS - 1, c: COLS - 1 };
+var DOOR_TILE = -2;
+
+/* ПОРЯДОК ЗАФИКСИРОВАН — от него зависит генерация поля */
+var ITEMS = ['item_tasbih', 'item_kalpak', 'item_scrunchie', 'item_nazar', 'item_lamp', 'item_tumar'];
+var SCENES = ['scene_1_village_dawn', 'scene_2_gorge', 'scene_3_village_night', 'scene_4_forest'];
+
+var SRC = {
+  logo: 'assets/logo.webp',
+  reldate: 'assets/release_date.webp',
+  qr: 'assets/qr.webp',
+  door: 'assets/door.webp',
+  asan_side: 'assets/characters/asan_side.webp',
+  asan_walk: 'assets/characters/asan_walk_strip.webp',
+  asan_front: 'assets/characters/asan_front.webp',
+  asel_side: 'assets/characters/asel_side.webp',
+  asel_walk: 'assets/characters/asel_walk_strip.webp',
+  asel_front: 'assets/characters/asel_front.webp',
+  witch_side: 'assets/characters/witch_side.webp',
+  witch_walk: 'assets/characters/witch_walk_strip.webp',
+  witch_scare: 'assets/characters/witch_scare.webp'
+};
+var SCARE_SRC = SRC.witch_scare;
+delete SRC.witch_scare;   /* нужен только при поимке — грузим отложенно */
+/* Необязательные арты. Появятся в постере автоматически, как только
+   положите PNG в assets/characters/ и заново запустите tools/build_assets.py */
+var OPTIONAL = {
+  asan_caught: 'assets/characters/asan_caught.webp',
+  asel_caught: 'assets/characters/asel_caught.webp'
+};
+ITEMS.forEach(function (n) { SRC[n] = 'assets/items/' + n + '.webp'; });
+SCENES.forEach(function (s, i) { SRC['scene' + i] = 'assets/scenes/' + s + '.webp'; });
+
+var IMG = {}, SPR = {};
+
+var optionalList = [];
+function loadOptional() {
+  /* манифест пишет tools/build_assets.py — знаем, какие арты вообще есть */
+  return fetch('assets/manifest.json').then(function (r) { return r.json(); })
+    .then(function (m) { optionalList = m.optional || []; }).catch(function () {});
+}
+/* Сцену поимки тянем только для выбранного героя и только когда он побежал:
+   на старте она не нужна, а весит больше сотни килобайт. */
+function loadCaught(who) {
+  var k = who + '_caught';
+  if (IMG[k] || optionalList.indexOf(k) < 0 || !OPTIONAL[k]) return;
+  var im = new Image(); im.src = OPTIONAL[k]; IMG[k] = im;
+}
+function preload(onProgress) {
+  var keys = Object.keys(SRC);
+  var total = keys.length, done = 0;
+  loadOptional();
+  return Promise.all(keys.map(function (k) {
+    return new Promise(function (res) {
+      var im = new Image();
+      im.onload = im.onerror = function () { done++; onProgress(done / total); IMG[k] = im; res(); };
+      im.src = SRC[k];
+    });
+  })).then(buildSpriteMeta);
+}
+function has(key) { var i = IMG[key]; return i && i.naturalWidth > 0; }
+
+/* --- нормализация полос ходьбы ---
+   В исходных полосах фигуры лежат не по сетке (у каждой свои поля), поэтому
+   один раз при загрузке пересобираем их в ровные кадры FW x FH,
+   персонаж по центру и ногами на нижней кромке. */
+var FW = 176, FH = 200;
+function ctxOf(img) {
+  var cv = document.createElement('canvas');
+  cv.width = img.naturalWidth; cv.height = img.naturalHeight;
+  var c = cv.getContext('2d'); c.imageSmoothingEnabled = false;
+  c.drawImage(img, 0, 0); return c;
+}
+function contentBox(ctx, x0, w, h) {
+  var d; try { d = ctx.getImageData(x0, 0, w, h).data; } catch (e) { return null; }
+  var minX = w, maxX = -1, minY = h, maxY = -1, x, y;
+  for (y = 0; y < h; y++) for (x = 0; x < w; x++) {
+    if (d[(y * w + x) * 4 + 3] > 16) {
+      if (x < minX) minX = x; if (x > maxX) maxX = x;
+      if (y < minY) minY = y; if (y > maxY) maxY = y;
+    }
+  }
+  if (maxX < 0) return null;
+  return { x: x0 + minX, y: minY, w: maxX - minX + 1, h: maxY - minY + 1 };
+}
+function normStrip(img, frames) {
+  var c = ctxOf(img), full = contentBox(c, 0, img.naturalWidth, img.naturalHeight);
+  if (!full) return null;
+  var fw = full.w / frames, k = (FH - 6) / full.h;
+  if (fw * k > FW - 10) k = (FW - 10) / fw;
+  var out = document.createElement('canvas');
+  out.width = FW * frames; out.height = FH;
+  var o = out.getContext('2d'); o.imageSmoothingEnabled = false;
+  for (var i = 0; i < frames; i++) {
+    var dw = fw * k, dh = full.h * k;
+    o.drawImage(img, full.x + i * fw, full.y, fw, full.h,
+      i * FW + (FW - dw) / 2, FH - dh - 3, dw, dh);
+  }
+  return out.toDataURL('image/png');
+}
+function normSingle(img) {
+  var c = ctxOf(img), b = contentBox(c, 0, img.naturalWidth, img.naturalHeight);
+  if (!b) return null;
+  var k = (FH - 6) / b.h;
+  if (b.w * k > FW - 10) k = (FW - 10) / b.w;
+  var out = document.createElement('canvas');
+  out.width = FW; out.height = FH;
+  var o = out.getContext('2d'); o.imageSmoothingEnabled = false;
+  var dw = b.w * k, dh = b.h * k;
+  o.drawImage(img, b.x, b.y, b.w, b.h, (FW - dw) / 2, FH - dh - 3, dw, dh);
+  return out.toDataURL('image/png');
+}
+function buildSpriteMeta() {
+  [['asan', 'asan_side', 'asan_walk'], ['asel', 'asel_side', 'asel_walk'],
+   ['witch', 'witch_side', 'witch_walk']].forEach(function (t) {
+    var side = IMG[t[1]], strip = IMG[t[2]];
+    var baseW = side.naturalWidth || 128;
+    var frames = Math.max(1, Math.round((strip.naturalWidth || baseW) / baseW));
+    var nw = null, ns = null;
+    try { nw = normStrip(strip, frames); ns = normSingle(side); } catch (e) {}
+    SPR[t[0]] = nw && ns
+      ? { side: ns, walk: nw, frames: frames, fw: FW, fh: FH }
+      : { side: SRC[t[1]], walk: SRC[t[2]], frames: frames,
+          fw: (strip.naturalWidth || baseW) / frames, fh: strip.naturalHeight || 192 };
+  });
+}
+
+/* ---------- звук ---------- */
+var music = $('#music');
+var muted = false, musicOn = false, actx = null;
+
+function ensureAudio() {
+  if (!actx) { var AC = window.AudioContext || window.webkitAudioContext; if (AC) actx = new AC(); }
+  if (actx && actx.state === 'suspended') actx.resume();
+}
+/* Музыка играет непрерывно — в том числе на экране результата.
+   Если она почему-то остановилась, заводим её заново с начала. */
+function startMusic() {
+  if (muted) return;
+  ensureAudio();
+  music.volume = 0.42;
+  if (!music.paused && !music.ended) { musicOn = true; return; }
+  try { music.currentTime = 0; } catch (e) {}
+  var p = music.play();
+  if (p && p.catch) p.catch(function () { musicOn = false; });
+  musicOn = true;
+}
+music.addEventListener('ended', function () { if (!muted) { music.currentTime = 0; music.play(); } });
+music.addEventListener('pause', function () {
+  if (!muted && musicOn && !document.hidden) setTimeout(function () {
+    if (!muted && music.paused && !document.hidden) {
+      music.currentTime = 0; music.play().catch(function () {});
+    }
+  }, 300);
+});
+/* свернули браузер или ушли на другую вкладку — музыка замолкает,
+   вернулись — продолжает с того же места */
+document.addEventListener('visibilitychange', function () {
+  if (document.hidden) { try { music.pause(); } catch (e) {} }
+  else if (!muted && musicOn) music.play().catch(function () {});
+});
+
+/* Мягкие низкие тоны: синус/треугольник + лоу-пасс, плавная атака —
+   чтобы эффекты не резали слух за долгий забег. */
+function tone(freq, dur, type, vol, slideTo, cutoff) {
+  if (muted || !actx) return;
+  var t = actx.currentTime;
+  var o = actx.createOscillator(), g = actx.createGain(), f = actx.createBiquadFilter();
+  o.type = type || 'sine';
+  o.frequency.setValueAtTime(freq, t);
+  if (slideTo) o.frequency.exponentialRampToValueAtTime(Math.max(28, slideTo), t + dur);
+  f.type = 'lowpass'; f.frequency.setValueAtTime(cutoff || 1100, t); f.Q.value = 0.6;
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.linearRampToValueAtTime(vol || 0.09, t + 0.035);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(f); f.connect(g); g.connect(actx.destination);
+  o.start(t); o.stop(t + dur + 0.03);
+}
+var SFX = {
+  collect: function (combo) {
+    var steps = [174, 196, 220, 262, 294, 330];
+    var f = steps[Math.min(combo, steps.length) - 1];
+    tone(f, 0.30, 'sine', 0.085, null, 900);
+    tone(f * 2, 0.22, 'triangle', 0.030, null, 1400);
+  },
+  bad: function () { tone(98, 0.22, 'sine', 0.070, 82, 500); },
+  crumble: function () {
+    tone(88, 0.26, 'triangle', 0.085, 58, 460);
+    setTimeout(function () { tone(147, 0.18, 'sine', 0.045, null, 800); }, 70);
+  },
+  enter: function () {
+    tone(58, 1.30, 'triangle', 0.115, 44, 380);
+    setTimeout(function () { tone(87, 0.90, 'sine', 0.055, 65, 420); }, 140);
+  },
+  caught: function () {
+    tone(130, 1.10, 'triangle', 0.130, 41, 620);
+    setTimeout(function () { tone(65, 1.30, 'sine', 0.110, 33, 320); }, 110);
+  },
+  win: function () {
+    [196, 262, 330].forEach(function (f, i) {
+      setTimeout(function () { tone(f, 0.40, 'sine', 0.080, null, 1000); }, i * 130);
+    });
+  },
+  shuffle: function () { tone(147, 0.28, 'triangle', 0.060, 220, 700); }
+};
+
+/* ---------- состояние ---------- */
+var state = 'load', hero = 'asan', level = 1;
+var board = [], cellEls = [], busy = false;
+var stats = { level: 1, clears: 0, score: 0, ms: 0 }, lastReason = 'caught';
+var levelStart = 0, runStart = 0;
+var M = { ox: 0, oy: 0, step: 0, cell: 52, boardY: 0, stageW: 0, stageH: 0 };
+var child = mkActor(), witch = mkActor();
+function mkActor() {
+  return { r: 0, c: 0, x: 0, y: 0, nr: null, nc: null, face: 1, frame: 0, ft: 0,
+           moving: false, huntT: 0, rush: 1 };
+}
+var stageEl, boardEl, bgEl, witchEl, childEl;
+
+/* Сложность: в начале ведьма идёт медленно и подходит долго,
+   с каждым уровнем подход короче, а погоня быстрее. */
+function cfg(lv) {
+  return {
+    types: Math.min(6, 4 + Math.floor((lv - 1) / 3)),   // новый тип раз в 3 уровня
+    approach: Math.max(4.5, 12.5 - 0.42 * (lv - 1)),    // сек до входа в дом
+    /* С 15-го уровня погоня догоняет скорость ребёнка (116), с 18-го
+       обгоняет — отсюда естественный потолок в 17-20 уровней. Без него
+       рекорд недели превращался в соревнование по усидчивости. */
+    hunt: Math.min(134, 56 + 4.4 * (lv - 1))
+  };
+}
+
+/* ---------- поле: построение и отрисовка ---------- */
+function buildBoardDOM() {
+  boardEl.innerHTML = ''; cellEls = [];
+  boardEl.style.gridTemplateColumns = 'repeat(' + COLS + ',var(--cell))';
+  boardEl.style.gridTemplateRows = 'repeat(' + ROWS + ',var(--cell))';
+  for (var r = 0; r < ROWS; r++) {
+    cellEls[r] = [];
+    for (var c = 0; c < COLS; c++) {
+      var d = document.createElement('div');
+      d.className = 'cell'; d.dataset.r = r; d.dataset.c = c;
+      d.appendChild(document.createElement('img'));
+      boardEl.appendChild(d); cellEls[r][c] = d;
+    }
+  }
+}
+function inb(r, c) { return r >= 0 && r < ROWS && c >= 0 && c < COLS; }
+function isItem(v) { return typeof v === 'number' && v >= 0; }
+function passable(r, c) { return inb(r, c) && (board[r][c] === null || board[r][c] === DOOR_TILE); }
+
+function genBoard(types) {
+  board = [];
+  var r, c, t, i;
+  for (r = 0; r < ROWS; r++) { board[r] = []; for (c = 0; c < COLS; c++) board[r][c] = 0; }
+  for (r = 0; r < ROWS; r++) for (c = 0; c < COLS; c++) {
+    if (r === DOOR.r && c === DOOR.c) { board[r][c] = DOOR_TILE; continue; }
+    /* стартовая комната 2x2 у входа: ребёнку сразу есть куда шагнуть
+       и есть где уворачиваться, когда ведьма войдёт в дом */
+    if (r <= ENTRY.r + 1 && c <= ENTRY.c + 1) { board[r][c] = null; continue; }
+    var pool = [];
+    for (t = 0; t < types; t++) {
+      var h2 = isItem(board[r][c - 1]) && board[r][c - 1] === t &&
+               isItem(board[r][c - 2]) && board[r][c - 2] === t;
+      var v2 = r >= 2 && board[r - 1][c] === t && board[r - 2][c] === t;
+      if (!h2 && !v2) pool.push(t);
+    }
+    if (!pool.length) pool.push(Math.floor(Math.random() * types));
+    board[r][c] = pool[Math.floor(Math.random() * pool.length)];
+  }
+
+  ensureProgress(true);
+}
+
+function render() {
+  for (var r = 0; r < ROWS; r++) for (var c = 0; c < COLS; c++) {
+    var el = cellEls[r][c], v = board[r][c], im = el.firstChild, cls = 'cell';
+    if (v === DOOR_TILE) {
+      cls += ' door'; if (im.getAttribute('src') !== SRC.door) im.src = SRC.door;
+      im.style.display = '';
+    } else if (v === null) {
+      cls += (r === ENTRY.r && c === ENTRY.c) ? ' entry' : ' empty';
+      im.style.display = 'none';
+    } else {
+      var s = SRC[ITEMS[v]];
+      if (im.getAttribute('src') !== s) im.src = s;
+      im.style.display = '';
+    }
+    el.className = cls;
+  }
+  markPath();
+  hintCells = null;                 /* классы стёрлись — подсказку покажем заново */
+}
+
+/* Подсвечиваем коридор, по которому ребёнок реально может пройти,
+   и предметы вплотную к нему — сразу видно, где рубить дальше. */
+function markPath() {
+  if (!cellEls.length || !passable(child.r, child.c)) return;
+  var d = distMap({ r: child.r, c: child.c }, null), key, p, r, c, i;
+  for (key in d) {
+    p = key.split(','); r = +p[0]; c = +p[1];
+    if (board[r][c] !== null) continue;
+    cellEls[r][c].className += ' path';
+  }
+  for (key in d) {
+    p = key.split(','); r = +p[0]; c = +p[1];
+    for (i = 0; i < DIRS.length; i++) {
+      var nr = r + DIRS[i][0], nc = c + DIRS[i][1];
+      if (!inb(nr, nc) || !isItem(board[nr][nc])) continue;
+      var e2 = cellEls[nr][nc];
+      if (e2.className.indexOf(' next') < 0) e2.className += ' next';
+    }
+  }
+}
+
+/* ---------- совпадения ---------- */
+function findMatches() {
+  var out = new Set(), r, c, run, v, k;
+  for (r = 0; r < ROWS; r++) {
+    run = 1;
+    for (c = 1; c <= COLS; c++) {
+      v = c < COLS ? board[r][c] : '#';
+      if (isItem(v) && v === board[r][c - 1]) run++;
+      else {
+        if (run >= 3 && isItem(board[r][c - 1])) for (k = c - run; k < c; k++) out.add(r + ',' + k);
+        run = 1;
+      }
+    }
+  }
+  for (c = 0; c < COLS; c++) {
+    run = 1;
+    for (r = 1; r <= ROWS; r++) {
+      v = r < ROWS ? board[r][c] : '#';
+      if (isItem(v) && v === board[r - 1][c]) run++;
+      else {
+        if (run >= 3 && isItem(board[r - 1][c])) for (k = r - run; k < r; k++) out.add(k + ',' + c);
+        run = 1;
+      }
+    }
+  }
+  return out;
+}
+function swapCells(r1, c1, r2, c2) {
+  var t = board[r1][c1]; board[r1][c1] = board[r2][c2]; board[r2][c2] = t;
+}
+function hasMove() {
+  for (var r = 0; r < ROWS; r++) for (var c = 0; c < COLS; c++) {
+    if (!isItem(board[r][c])) continue;
+    var dirs = [[0, 1], [1, 0]];
+    for (var i = 0; i < 2; i++) {
+      var r2 = r + dirs[i][0], c2 = c + dirs[i][1];
+      if (!inb(r2, c2) || !isItem(board[r2][c2])) continue;
+      swapCells(r, c, r2, c2);
+      var ok = findMatches().size > 0;
+      swapCells(r, c, r2, c2);
+      if (ok) return true;
+    }
+  }
+  return false;
+}
+function snapshot() { return board.map(function (row) { return row.slice(); }); }
+function restore(s) { board = s.map(function (row) { return row.slice(); }); }
+
+/* Клетки с предметами, вплотную примыкающие к коридору ребёнка.
+   Убрать любую из них — значит реально продвинуть ребёнка вперёд. */
+function frontierSet() {
+  var reach = distMap({ r: child.r, c: child.c }, null), f = {}, key, i;
+  for (key in reach) {
+    var p = key.split(','), r = +p[0], c = +p[1];
+    for (i = 0; i < DIRS.length; i++) {
+      var nr = r + DIRS[i][0], nc = c + DIRS[i][1];
+      if (inb(nr, nc) && isItem(board[nr][nc])) f[nr + ',' + nc] = 1;
+    }
+  }
+  return f;
+}
+
+/* Ищем ход. Приоритет — «полезный»: тот, что убирает предмет вплотную к
+   ребёнку. Именно его отсутствие рождало жалобу «передо мной нет вариантов».
+   Возвращает {move:[r,c,r2,c2], useful:bool} или null. */
+function findMove(needUseful) {
+  var front = frontierSet(), any = null, r, c, i;
+  var dirs = [[0, 1], [1, 0]];
+  for (r = 0; r < ROWS; r++) for (c = 0; c < COLS; c++) {
+    if (!isItem(board[r][c])) continue;
+    for (i = 0; i < 2; i++) {
+      var r2 = r + dirs[i][0], c2 = c + dirs[i][1];
+      if (!inb(r2, c2) || !isItem(board[r2][c2])) continue;
+      swapCells(r, c, r2, c2);
+      var m = findMatches(), useful = false;
+      m.forEach(function (k) { if (front[k]) useful = true; });
+      swapCells(r, c, r2, c2);
+      if (!m.size) continue;
+      if (useful) return { move: [r, c, r2, c2], useful: true };
+      if (!any) any = { move: [r, c, r2, c2], useful: false };
+    }
+  }
+  return needUseful ? null : any;
+}
+
+/* Гарантия проходимости. После каждой сборки поле обязано удовлетворять двум
+   условиям, иначе перемешиваем оставшиеся предметы:
+     1) на поле нет готовых троек (иначе «три в ряд стоят, но не исчезают»);
+     2) существует ход, открывающий проход ПЕРЕД РЕБЁНКОМ.
+   Пункт 2 — и есть лекарство от тупика: у игрока всегда есть что сделать,
+   чтобы сдвинуть ребёнка с места. */
+function ensureProgress(silent) {
+  /* Коридор уже достроен — «фронта» перед ребёнком нет, и требовать
+     полезный ход бессмысленно: достаточно, чтобы поле было чистым
+     и на нём оставался хоть какой-то ход. */
+  var doorOpen = !!firstStep({ r: child.r, c: child.c }, DOOR, null);
+  var okNow = function () {
+    return findMatches().size === 0 && (doorOpen ? !!findMove(false) : !!findMove(true));
+  };
+  if (okNow()) return;
+
+  var pos = [], vals = [], r, c, i, j;
+  for (r = 0; r < ROWS; r++) for (c = 0; c < COLS; c++)
+    if (isItem(board[r][c])) { pos.push([r, c]); vals.push(board[r][c]); }
+
+  var cleanAnyMove = null;
+  if (vals.length >= 3) {
+    for (var t = 0; t < 900; t++) {
+      for (i = vals.length - 1; i > 0; i--) {
+        j = Math.floor(Math.random() * (i + 1));
+        var tmp = vals[i]; vals[i] = vals[j]; vals[j] = tmp;
+      }
+      for (i = 0; i < pos.length; i++) board[pos[i][0]][pos[i][1]] = vals[i];
+      if (findMatches().size) continue;              // грязная раскладка не годится
+      if (okNow()) {
+        render();
+        if (!silent) { SFX.shuffle(); toast(tr('t_shuffle')); }
+        return;
+      }
+      if (!cleanAnyMove && findMove(false)) cleanAnyMove = snapshot();
+    }
+  }
+  /* Полезный ход построить не удалось — значит предметов осталось совсем мало.
+     Убираем те, что подпирают ребёнка: проход открывается, поле не вычищаем. */
+  var front = frontierSet(), opened = 0;
+  for (var key in front) {
+    var q = key.split(',');
+    board[+q[0]][+q[1]] = null; opened++;
+  }
+  if (!opened && cleanAnyMove) { restore(cleanAnyMove); render(); return; }
+  if (!opened) for (i = 0; i < pos.length; i++) board[pos[i][0]][pos[i][1]] = null;
+  render();
+  if (!silent) { SFX.shuffle(); toast(tr('t_opened')); }
+}
+
+/* ---------- ход игрока ---------- */
+function tryMove(r, c, dr, dc) {
+  if (busy || state !== 'play') return;
+  var r2 = r + dr, c2 = c + dc;
+  if (!inb(r2, c2) || !isItem(board[r][c]) || !isItem(board[r2][c2])) return;
+  busy = true;
+  swapCells(r, c, r2, c2);
+  if (findMatches().size === 0) {
+    render();
+    setTimeout(function () {
+      swapCells(r, c, r2, c2); render();
+      cellEls[r][c].classList.add('bad'); cellEls[r2][c2].classList.add('bad');
+      SFX.bad();
+      setTimeout(function () {
+        cellEls[r][c].classList.remove('bad'); cellEls[r2][c2].classList.remove('bad');
+        busy = false;
+      }, 240);
+    }, 110);
+    return;
+  }
+  render();
+  resolve().then(function () { busy = false; });
+}
+
+function resolve() {
+  var combo = 0;
+  function step() {
+    var m = findMatches();
+    if (!m.size) {
+      ensureProgress(false);
+      if (findMatches().size) return step();       /* подстраховка: чисто — значит чисто */
+      child.nr = null; witch.nr = null;
+      return Promise.resolve();
+    }
+    combo++; stats.clears++; stats.score += 100 * combo;
+    resetHint();
+    SFX.collect(combo);
+    m.forEach(function (k) { var p = k.split(','); cellEls[+p[0]][+p[1]].classList.add('pop'); });
+    return wait(190).then(function () {
+      m.forEach(function (k) { var p = k.split(','); board[+p[0]][+p[1]] = null; });
+      /* ГЛАВНОЕ ПРАВИЛО: любая сборка проламывает один блок на пути ребёнка.
+         Благодаря этому игроку не нужно выцеливать конкретные предметы перед
+         ребёнком — достаточно собирать где угодно, и он идёт дальше. */
+      var pb = pathBlock();
+      if (!pb) { finishStep(null); return wait(120); }
+      cellEls[pb.r][pb.c].classList.add('crumble');
+      SFX.crumble();
+      return wait(200).then(function () { finishStep(pb); return wait(90); });
+    }).then(step);
+
+    function finishStep(pb) {
+      if (pb) board[pb.r][pb.c] = null;
+      render();
+      child.nr = null;                              /* тропа стала шире — идём дальше */
+      if (combo > 1) toast(tr('t_combo') + combo);
+    }
+  }
+  return step();
+}
+
+/* ---------- ввод ---------- */
+var touch = null;
+function onDown(e) {
+  startMusic();
+  if (state !== 'play' || busy) return;
+  var node = e.target.closest ? e.target.closest('.cell') : null;
+  if (!node) return;
+  var p = pointOf(e);
+  touch = { r: +node.dataset.r, c: +node.dataset.c, x: p.x, y: p.y };
+}
+function onUp(e) {
+  if (!touch) return;
+  var p = pointOf(e), dx = p.x - touch.x, dy = p.y - touch.y, t = touch;
+  touch = null;
+  if (Math.abs(dx) < 14 && Math.abs(dy) < 14) return;
+  if (Math.abs(dx) > Math.abs(dy)) tryMove(t.r, t.c, 0, dx > 0 ? 1 : -1);
+  else tryMove(t.r, t.c, dy > 0 ? 1 : -1, 0);
+}
+function pointOf(e) {
+  var t = e.changedTouches ? e.changedTouches[0] : e;
+  return { x: t.clientX, y: t.clientY };
+}
+
+/* ---------- геометрия: измеряем РЕАЛЬНУЮ позицию поля ---------- */
+function layout() {
+  var sw = stageEl.clientWidth, sh = stageEl.clientHeight, gap = 3;
+  var byW = Math.floor((sw - 14 - (COLS + 1) * gap - 2) / COLS);
+  var byH = Math.floor((sh - 104 - (ROWS + 1) * gap - 2) / ROWS);
+  /* нижняя граница 40px — чтобы по предмету было удобно свайпать пальцем */
+  var cell = clamp(Math.min(byW, byH), 40, 60);
+  document.documentElement.style.setProperty('--cell', cell + 'px');
+  document.documentElement.style.setProperty('--gap', gap + 'px');
+  measure();
+}
+function measure() {
+  var sr = stageEl.getBoundingClientRect();
+  var a = cellEls[0][0].getBoundingClientRect(), b = cellEls[1][1].getBoundingClientRect();
+  M.stageW = sr.width; M.stageH = sr.height; M.cell = a.width;
+  M.step = (b.left - a.left) || a.width;
+  M.ox = a.left - sr.left + a.width / 2;
+  M.oy = a.top - sr.top + a.height / 2;
+  M.boardY = boardEl.getBoundingClientRect().top - sr.top;
+}
+function cellCenter(r, c) { return { x: M.ox + c * M.step, y: M.oy + r * M.step }; }
+
+/* ---------- дорога-серпантин на заднике ---------- */
+var road = { pts: [], seg: [], len: 1 };
+function buildRoad() {
+  var h = Math.max(60, M.boardY), W = M.stageW;
+  var norm = [[0.50, -0.03], [0.17, 0.22], [0.83, 0.45], [0.24, 0.68], [0.66, 0.88]];
+  var pts = norm.map(function (p) { return { x: p[0] * W, y: p[1] * h }; });
+  pts.push(cellCenter(ENTRY.r, ENTRY.c));
+  var seg = [], total = 0;
+  for (var i = 1; i < pts.length; i++) {
+    var d = Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y);
+    seg.push(d); total += d;
+  }
+  road = { pts: pts, seg: seg, len: total || 1 };
+}
+function roadAt(t) {
+  var d = clamp(t, 0, 1) * road.len, i = 0;
+  while (i < road.seg.length && d > road.seg[i]) { d -= road.seg[i]; i++; }
+  if (i >= road.seg.length) { var l = road.pts[road.pts.length - 1]; return { x: l.x, y: l.y }; }
+  var k = road.seg[i] ? d / road.seg[i] : 0, a = road.pts[i], b = road.pts[i + 1];
+  return { x: a.x + (b.x - a.x) * k, y: a.y + (b.y - a.y) * k };
+}
+
+/* ---------- пути ---------- */
+/* Только четыре стороны. Диагонали делали путь вдвое короче — уровень
+   заканчивался за три сборки, и ведьма не успевала создать напряжение.
+   Связность коридора теперь обеспечивает не диагональ, а правило
+   «сборка ломает блок на пути» (см. resolve). */
+var DIRS = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+
+function distMap(from, block) {
+  var dist = {}, q = [from], head = 0;
+  dist[from.r + ',' + from.c] = 0;
+  while (head < q.length) {
+    var cur = q[head++], d0 = dist[cur.r + ',' + cur.c];
+    for (var i = 0; i < DIRS.length; i++) {
+      var nr = cur.r + DIRS[i][0], nc = cur.c + DIRS[i][1], key = nr + ',' + nc;
+      if (!passable(nr, nc) || key in dist) continue;
+      if (block && block[key]) continue;
+      dist[key] = d0 + 1; q.push({ r: nr, c: nc });
+    }
+  }
+  return dist;
+}
+function firstStep(from, goal, block) {
+  if (from.r === goal.r && from.c === goal.c) return null;
+  var dist = distMap(goal, block), here = dist[from.r + ',' + from.c];
+  if (here === undefined) return null;
+  var best = null, bestD = here;
+  for (var i = 0; i < DIRS.length; i++) {
+    var nr = from.r + DIRS[i][0], nc = from.c + DIRS[i][1];
+    if (!passable(nr, nc)) continue;
+    var d = dist[nr + ',' + nc];
+    if (d !== undefined && d < bestD) { bestD = d; best = { r: nr, c: nc }; }
+  }
+  return best;
+}
+/* Ближайшая к цели клетка из уже открытых — благодаря ей герой идёт дальше
+   по мере того, как открывается коридор, не дожидаясь полного пути. */
+function nearestReachable(from, goal, block) {
+  var dist = distMap(from, block), best = from, bestScore = 1e9;
+  for (var key in dist) {
+    var p = key.split(','), r = +p[0], c = +p[1];
+    var score = (Math.abs(r - goal.r) + Math.abs(c - goal.c)) * 100 + dist[key];
+    if (score < bestScore) { bestScore = score; best = { r: r, c: c }; }
+  }
+  return best;
+}
+
+/* ===== ПОДСКАЗКА ==========================================================
+   Ребёнок больше ничего не ломает сам — это читалось как магия. Вместо этого:
+   если игрок какое-то время не собрал ни одной тройки, поле само показывает
+   ПАРУ предметов, которые надо поменять местами. Подсвечиваются обе клетки —
+   чтобы не возникало мысли «тащить надо вот этот один».
+   Приоритет у хода, открывающего проход перед ребёнком.                     */
+var HINT_DELAY = 4;                 // сек без удачной сборки до показа подсказки
+var hintT = 0, hintCells = null, hintShown = false;
+
+function clearHint() {
+  if (!hintCells) return;
+  hintCells.forEach(function (p) {
+    if (cellEls[p[0]] && cellEls[p[0]][p[1]]) cellEls[p[0]][p[1]].classList.remove('hint');
+  });
+  hintCells = null;
+}
+function showHint() {
+  clearHint();
+  var f = findMove(true) || findMove(false);
+  if (!f) return;
+  var m = f.move;
+  hintCells = [[m[0], m[1]], [m[2], m[3]]];
+  hintCells.forEach(function (p) { cellEls[p[0]][p[1]].classList.add('hint'); });
+  if (!hintShown) { hintShown = true; toast(tr('t_hint')); }
+}
+function updateHint(dt) {
+  if (busy) return;
+  hintT += dt;
+  if (hintT >= HINT_DELAY && !hintCells) showHint();
+}
+function resetHint() { hintT = 0; clearHint(); }
+
+/* Первый предмет, стоящий на кратчайшем пути ребёнка к двери.
+   Дейкстра по полю: пустая клетка стоит 0, клетка с предметом — 1. */
+function pathBlock() {
+  var INF = 1e9, dist = [], prev = {}, r, c, i;
+  for (r = 0; r < ROWS; r++) { dist[r] = []; for (c = 0; c < COLS; c++) dist[r][c] = INF; }
+  dist[child.r][child.c] = 0;
+  var q = [{ r: child.r, c: child.c }];
+  while (q.length) {
+    var bi = 0;
+    for (i = 1; i < q.length; i++)
+      if (dist[q[i].r][q[i].c] < dist[q[bi].r][q[bi].c]) bi = i;
+    var cur = q.splice(bi, 1)[0];
+    if (cur.r === DOOR.r && cur.c === DOOR.c) break;
+    for (i = 0; i < DIRS.length; i++) {
+      var nr = cur.r + DIRS[i][0], nc = cur.c + DIRS[i][1];
+      if (!inb(nr, nc)) continue;
+      var nd = dist[cur.r][cur.c] + (passable(nr, nc) ? 0 : 1);
+      if (nd < dist[nr][nc]) { dist[nr][nc] = nd; prev[nr + ',' + nc] = cur; q.push({ r: nr, c: nc }); }
+    }
+  }
+  if (dist[DOOR.r][DOOR.c] >= INF) return null;
+  var path = [], node = { r: DOOR.r, c: DOOR.c };
+  while (node) { path.unshift(node); node = prev[node.r + ',' + node.c]; }
+  for (i = 0; i < path.length; i++)
+    if (isItem(board[path[i].r][path[i].c])) return path[i];
+  return null;
+}
+
+function pickWitch(a) {
+  var from = { r: a.r, c: a.c }, goal = { r: child.r, c: child.c };
+  return firstStep(from, goal, null) || firstStep(from, nearestReachable(from, goal, null), null);
+}
+function pickChild(a) {
+  var from = { r: a.r, c: a.c }, s;
+  if (witch.phase !== 'hunt') {
+    s = firstStep(from, DOOR, null);
+    return s || firstStep(from, nearestReachable(from, DOOR, null), null);
+  }
+  var block = {};
+  for (var dr = -1; dr <= 1; dr++) for (var dc = -1; dc <= 1; dc++)
+    block[(witch.r + dr) + ',' + (witch.c + dc)] = 1;
+  s = firstStep(from, DOOR, block);
+  if (s) return s;
+  s = firstStep(from, nearestReachable(from, DOOR, block), block);
+  if (s) return s;
+  /* отход: сосед, максимально удалённый от ведьмы (при равенстве — ближе к двери) */
+  var wd = distMap({ r: witch.r, c: witch.c }, null), dd = distMap(DOOR, null);
+  var hereW = wd[from.r + ',' + from.c]; if (hereW === undefined) hereW = 99;
+  var best = null, bw = hereW, bdoor = 1e9;
+  for (var i = 0; i < DIRS.length; i++) {
+    var nr = from.r + DIRS[i][0], nc = from.c + DIRS[i][1], key = nr + ',' + nc;
+    if (!passable(nr, nc)) continue;
+    var w = wd[key] === undefined ? 99 : wd[key];
+    var d = dd[key] === undefined ? 1e9 : dd[key];
+    if (w > bw || (w === bw && best && d < bdoor)) { bw = w; bdoor = d; best = { r: nr, c: nc }; }
+  }
+  return best;
+}
+function advance(a, speed, dt, pick) {
+  if (a.nr !== null && !passable(a.nr, a.nc)) a.nr = null;
+  if (a.nr === null) {
+    var n = pick(a);
+    if (!n) { a.moving = false; return; }
+    a.nr = n.r; a.nc = n.c;
+  }
+  var t = cellCenter(a.nr, a.nc);
+  var dx = t.x - a.x, dy = t.y - a.y, d = Math.hypot(dx, dy), st = speed * dt;
+  if (d <= st || d < 0.4) {
+    a.x = t.x; a.y = t.y; a.r = a.nr; a.c = a.nc; a.nr = null; a.moving = false;
+  } else {
+    a.x += dx / d * st; a.y += dy / d * st; a.moving = true;
+    if (Math.abs(dx) > 0.4) a.face = dx < 0 ? -1 : 1;
+  }
+}
+
+function drawActor(el, a, spr, scale) {
+  var h = M.cell * scale, w = h * (spr.fw / spr.fh);
+  el.style.width = w + 'px'; el.style.height = h + 'px';
+  if (a.moving && spr.frames > 1) {
+    el.style.backgroundImage = 'url(' + spr.walk + ')';
+    el.style.backgroundSize = (spr.frames * 100) + '% 100%';
+    el.style.backgroundPosition = (a.frame / (spr.frames - 1) * 100) + '% 0';
+  } else {
+    el.style.backgroundImage = 'url(' + spr.side + ')';
+    el.style.backgroundSize = '100% 100%'; el.style.backgroundPosition = '0 0';
+  }
+  /* ноги — на клетке, а не под полем */
+  el.style.transform = 'translate(' + (a.x - w / 2) + 'px,' +
+    (a.y - h + M.cell * 0.34) + 'px) scaleX(' + a.face + ')';
+}
+
+/* ---------- цикл ---------- */
+/* Пока Жез Кемпир в доме, она наливается силой: сначала RUSH_GRACE секунд
+   идёт как обычно (это время нужно нормальному игроку, чтобы доиграть
+   уровень), а потом разгоняется и тянется всё дальше. Так наказывается
+   только стояние на месте, а не игра. */
+var RUSH_GRACE = 10;                          // сек спокойной погони
+var HUNT_RUSH = 0.075, HUNT_RUSH_MAX = 2.6;   // дальше +7.5%/сек, потолок x2.6
+var REACH_GROW = 0.26;                        // насколько растёт её замах
+var last = 0, wt = 0, shakeT = 0;
+function loop(ts) { requestAnimationFrame(loop); frame(ts); }
+/* страховка: в некоторых webview requestAnimationFrame не тикает,
+   пока страница не перерисовывается — тогда кадры гонит таймер */
+function watchdog() {
+  if (document.hidden) return;
+  var now = performance.now();
+  if (now - last > 200) frame(now);
+}
+function frame(ts) {
+  var dt = last ? Math.min(0.05, (ts - last) / 1000) : 0;
+  last = ts;
+  if (state !== 'play') return;
+
+  var C = cfg(level), px = M.cell / 56;
+
+  if (witch.phase === 'road') {
+    wt += dt / C.approach;
+    var p = roadAt(wt);
+    if (p.x - witch.x < -0.3) witch.face = -1; else if (p.x - witch.x > 0.3) witch.face = 1;
+    witch.x = p.x; witch.y = p.y; witch.moving = true;
+    if (wt >= 1) {
+      witch.phase = 'hunt'; witch.huntT = 0;
+      witch.r = ENTRY.r; witch.c = ENTRY.c; witch.nr = null;
+      var e = cellCenter(ENTRY.r, ENTRY.c); witch.x = e.x; witch.y = e.y;
+      SFX.enter(); toast(tr('t_entered'));
+    }
+  } else {
+    /* Пока Жез Кемпир в доме, она разгоняется. Уворачиваться можно,
+       но не бесконечно — иначе пассивная игра ничем не наказывалась. */
+    witch.huntT += dt;
+    var over = Math.max(0, witch.huntT - RUSH_GRACE);
+    witch.rush = Math.min(HUNT_RUSH_MAX, 1 + over * HUNT_RUSH);
+    advance(witch, C.hunt * witch.rush * px, dt, pickWitch);
+  }
+  advance(child, 116 * px, dt, pickChild);
+  updateHint(dt);
+
+  [child, witch].forEach(function (a) {
+    if (a.moving) { a.ft += dt; if (a.ft > 0.085) { a.ft = 0; a.frame++; } } else a.frame = 0;
+  });
+  child.frame %= SPR[hero].frames; witch.frame %= SPR.witch.frames;
+  drawActor(childEl, child, SPR[hero], 1.55);
+  drawActor(witchEl, witch, SPR.witch, 1.72);
+
+  var dist = Math.hypot(witch.x - child.x, witch.y - child.y);
+  var dread = witch.phase === 'hunt' ? clamp(1 - dist / (M.cell * 4), 0, 1) : 0;
+  document.documentElement.style.setProperty('--dread', (dread * 0.85).toFixed(3));
+  shakeT += dt * 40;
+  document.documentElement.style.setProperty('--shake',
+    (Math.sin(shakeT) * dread * 3.5).toFixed(2) + 'px');
+
+  var reach = M.cell * (0.5 + REACH_GROW * ((witch.rush || 1) - 1));
+  if (witch.phase === 'hunt' && dist < reach) { onCaught(); return; }
+  if (child.r === DOOR.r && child.c === DOOR.c && child.nr === null) onEscaped();
+}
+
+/* ---------- экраны ---------- */
+function show(id) {
+  ['scr-load', 'scr-menu', 'scr-game', 'scr-catch', 'scr-over',
+   'scr-contest', 'scr-tickets'].forEach(function (s) {
+    document.getElementById(s).classList.toggle('active', s === id);
+  });
+}
+function toast(txt) {
+  var t = $('#toast');
+  t.textContent = txt; t.classList.remove('show'); void t.offsetWidth; t.classList.add('show');
+}
+function fmtTime(ms) {
+  var s = Math.floor(ms / 1000);
+  return Math.floor(s / 60) + ':' + ('0' + (s % 60)).slice(-2);
+}
+
+function startRun() {
+  level = 1;
+  stats = { level: 1, clears: 0, score: 0, ms: 0 };
+  runStart = performance.now();
+  loadCaught(hero);
+  show('scr-game'); startMusic(); startLevel();
+}
+function startLevel() {
+  var C = cfg(level);
+  stats.level = level;
+  $('#hud-level').textContent = tr('level') + ' ' + level;
+  bgEl.style.backgroundImage = 'url(' + SRC['scene' + ((level - 1) % SCENES.length)] + ')';
+
+  /* ВАЖНО: ребёнка ставим на вход ДО генерации поля — иначе гарантия
+     «перед ребёнком всегда есть ход» построится вокруг его позиции
+     с прошлого уровня, и новый уровень может начаться в тупике. */
+  child = mkActor(); child.r = ENTRY.r; child.c = ENTRY.c;
+  witch = mkActor(); witch.phase = 'road';
+
+  genBoard(C.types);
+  layout(); render(); buildRoad();
+
+  var e = cellCenter(ENTRY.r, ENTRY.c); child.x = e.x; child.y = e.y;
+  var p0 = roadAt(0); witch.x = p0.x; witch.y = p0.y;
+  wt = 0; busy = false;
+  hintT = 0; hintCells = null; hintShown = false;
+  levelStart = performance.now();
+  state = 'play';
+  toast(tr('t_level') + ' ' + level);
+}
+function onEscaped() {
+  state = 'pause';
+  var secs = (performance.now() - levelStart) / 1000;
+  stats.score += 500 * level + Math.max(0, Math.round(60 - secs)) * 10;
+  SFX.win(); toast(tr('t_escaped'));
+  document.documentElement.style.setProperty('--dread', 0);
+  document.documentElement.style.setProperty('--shake', '0px');
+  setTimeout(function () { level++; startLevel(); }, 1250);
+}
+function onCaught() {
+  state = 'catch';
+  SFX.caught();
+  document.documentElement.style.setProperty('--dread', 0);
+  document.documentElement.style.setProperty('--shake', '0px');
+  var f = $('#catch-face');
+  f.style.animation = 'none'; void f.offsetWidth; f.style.animation = '';
+  show('scr-catch');
+  if (TG && TG.HapticFeedback) { try { TG.HapticFeedback.notificationOccurred('error'); } catch (e) {} }
+  setTimeout(function () { endRun('caught'); }, 1150);
+}
+function endRun(reason) {
+  state = 'over'; lastReason = reason;
+  stats.ms = performance.now() - runStart;
+  /* музыку НЕ останавливаем — она продолжает играть на экране результата */
+  startMusic();
+  $('#over-verdict').textContent = reason === 'caught'
+    ? tr(hero === 'asel' ? 'caught_f' : 'caught_m') : tr('quit');
+  $('#over-verdict').classList.toggle('win', reason !== 'caught');
+  $('#st-level').textContent = stats.level;
+  $('#st-score').textContent = stats.score;
+  $('#st-time').textContent = fmtTime(stats.ms);
+  $('#st-clears').textContent = stats.clears;
+
+  /* личный рекорд — повод сыграть ещё раз */
+  var best = 0;
+  try { best = parseInt(localStorage.getItem('jk_best') || '0', 10) || 0; } catch (e) {}
+  var rec = $('#st-record');
+  if (stats.score > best) {
+    try { localStorage.setItem('jk_best', String(stats.score)); } catch (e) {}
+    rec.textContent = tr('newrecord'); rec.className = 'record new';
+  } else if (best) {
+    /* «до рекорда осталось N» бьёт по мотивации точнее, чем сухой рекорд */
+    rec.textContent = tr('to_record') + (best - stats.score);
+    rec.className = 'record';
+  } else {
+    rec.textContent = ''; rec.className = 'record';
+  }
+  show('scr-over');
+  preparePoster();
+}
+
+/* ---------- постер результата ---------- */
+var posterBlob = null;
+function shareText() {
+  return tr('share').replace('{score}', stats.score)
+    .replace('{level}', stats.level)
+    .replace('{url}', GAME_URL)
+    .replace('{trailer}', TRAILER_URL);
+}
+function drawFit(ctx, img, x, y, w, h) {
+  if (!img || !img.naturalWidth) return false;
+  var k = Math.min(w / img.naturalWidth, h / img.naturalHeight);
+  var dw = img.naturalWidth * k, dh = img.naturalHeight * k;
+  ctx.drawImage(img, x + (w - dw) / 2, y + (h - dh) / 2, dw, dh);
+  return true;
+}
+/* по нижней кромке — чтобы персонажи стояли на одной линии земли */
+function drawStand(ctx, img, cx, groundY, maxW, maxH, flip) {
+  if (!img || !img.naturalWidth) return false;
+  var k = Math.min(maxW / img.naturalWidth, maxH / img.naturalHeight);
+  var dw = img.naturalWidth * k, dh = img.naturalHeight * k;
+  ctx.save();
+  ctx.translate(cx, groundY - dh);
+  if (flip) ctx.scale(-1, 1);          /* зеркалим относительно центра фигуры */
+  ctx.drawImage(img, -dw / 2, 0, dw, dh);
+  ctx.restore();
+  return true;
+}
+function drawCover(ctx, img, x, y, w, h) {
+  if (!img || !img.naturalWidth) return;
+  var k = Math.max(w / img.naturalWidth, h / img.naturalHeight);
+  var dw = img.naturalWidth * k, dh = img.naturalHeight * k;
+  ctx.drawImage(img, x + (w - dw) / 2, y + (h - dh) / 2, dw, dh);
+}
+function ruleLine(ctx, y, w) {
+  var g = ctx.createLinearGradient(540 - w / 2, 0, 540 + w / 2, 0);
+  g.addColorStop(0, 'rgba(232,184,75,0)');
+  g.addColorStop(0.5, 'rgba(232,184,75,.75)');
+  g.addColorStop(1, 'rgba(232,184,75,0)');
+  ctx.fillStyle = g; ctx.fillRect(540 - w / 2, y, w, 2);
+}
+function setFont(ctx, font, spacing) {
+  try { ctx.letterSpacing = (spacing || 0) + 'px'; } catch (e) {}
+  ctx.font = font;
+}
+
+function buildShareImage() {
+  var cv = $('#sharecv'), ctx = cv.getContext('2d');
+  var F = '"Trebuchet MS","Segoe UI",sans-serif';
+  ctx.clearRect(0, 0, 1080, 1920);
+  ctx.imageSmoothingEnabled = false;
+
+  drawCover(ctx, IMG['scene' + ((stats.level - 1) % SCENES.length)], 0, 0, 1080, 1920);
+  var g = ctx.createLinearGradient(0, 0, 0, 1920);
+  g.addColorStop(0.00, 'rgba(5,8,14,.92)');
+  g.addColorStop(0.28, 'rgba(5,8,14,.58)');
+  g.addColorStop(0.62, 'rgba(5,8,14,.52)');
+  g.addColorStop(1.00, 'rgba(5,8,14,.96)');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, 1080, 1920);
+  var vg = ctx.createRadialGradient(540, 900, 260, 540, 900, 1000);
+  vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,.55)');
+  ctx.fillStyle = vg; ctx.fillRect(0, 0, 1080, 1920);
+
+  ctx.textAlign = 'center';
+
+  /* Instagram Stories перекрывает верхние ~250 и нижние ~250 пикселей
+     своим интерфейсом, поэтому всё важное держим между ними. */
+  drawFit(ctx, IMG.logo, 100, 268, 880, 150);
+
+  ctx.fillStyle = lastReason === 'caught' ? 'rgba(192,57,43,.95)' : 'rgba(232,184,75,.9)';
+  setFont(ctx, '700 28px ' + F, 7);
+  ctx.fillText(lastReason === 'caught'
+    ? tr(hero === 'asel' ? 'caught_f' : 'caught_m') : tr('quit'), 540, 470);
+  ruleLine(ctx, 498, 520);
+
+  ctx.fillStyle = '#8ea0b5';
+  setFont(ctx, '700 28px ' + F, 3);
+  ctx.fillText(tr('level') + ' ' + stats.level + '   \u00b7   ' + fmtTime(stats.ms) +
+    '   \u00b7   ' + stats.clears + ' ' + tr('clears'), 540, 556);
+
+  ctx.save();
+  ctx.shadowColor = 'rgba(232,184,75,.45)'; ctx.shadowBlur = 60;
+  ctx.fillStyle = '#E8B84B'; setFont(ctx, '700 176px ' + F, 0);
+  ctx.fillText(String(stats.score), 540, 712);
+  ctx.restore();
+  ctx.fillStyle = '#8ea0b5'; setFont(ctx, '700 28px ' + F, 12);
+  ctx.fillText(tr('points'), 540, 760);
+  setFont(ctx, '700 28px ' + F, 0);
+
+  /* сцена поимки */
+  var GROUND = 1240;
+  var sh = ctx.createRadialGradient(540, GROUND, 40, 540, GROUND, 470);
+  sh.addColorStop(0, 'rgba(0,0,0,.55)'); sh.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = sh;
+  ctx.beginPath(); ctx.ellipse(540, GROUND, 470, 70, 0, 0, 6.284); ctx.fill();
+
+  if (lastReason === 'caught' && has(hero + '_caught')) {
+    drawStand(ctx, IMG[hero + '_caught'], 540, GROUND, 900, 470, false);
+  } else {
+    drawStand(ctx, IMG[hero + '_side'], 330, GROUND, 320, 430, false);
+    drawStand(ctx, IMG.witch_side, 760, GROUND, 340, 460, true);
+  }
+
+  /* призыв + аккаунт: в сторис работает отметка, а не QR —
+     зритель смотрит её на своём же телефоне и сканировать ему нечем */
+  ruleLine(ctx, 1286, 620);
+  ctx.fillStyle = '#E8B84B'; setFont(ctx, '700 34px ' + F, 2);
+  ctx.fillText(tr('p_win'), 540, 1340);
+  ctx.fillStyle = '#ffffff'; setFont(ctx, '700 46px ' + F, 1);
+  ctx.fillText('@' + INSTA, 540, 1404);
+  setFont(ctx, '400 27px ' + F, 0);
+
+  /* дата выхода — ключевой промо-элемент, держим её крупной и внутри
+     безопасной зоны сторис (до 1670 по вертикали) */
+  drawFit(ctx, IMG.reldate, 258, 1440, 564, 216);
+
+  /* QR — маленький, для пересылки картинки в мессенджерах */
+  if (has('qr')) {
+    var qs = 132, qx = 908, qy = 1700;
+    ctx.fillStyle = '#eef2f7';
+    roundRect(ctx, qx - 10, qy - 10, qs + 20, qs + 20, 14); ctx.fill();
+    ctx.drawImage(IMG.qr, qx, qy, qs, qs);
+  }
+  return cv;
+}
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+/* Готовим картинку заранее: тогда по нажатию можно сразу открыть системное
+   «Поделиться» — иначе Safari теряет жест пользователя, пока рисуется canvas. */
+function preparePoster() {
+  posterBlob = null;
+  try {
+    buildShareImage().toBlob(function (b) { posterBlob = b; }, 'image/png');
+  } catch (e) {}
+}
+/* Сохранение результата: системный лист «Поделиться» кладёт картинку
+   в галерею/фотоплёнку. Скачивание в «Загрузки» — только запасной путь. */
+/* Инстаграм не даёт веб-странице класть картинку в сторис — это закрыто
+   у них. Максимум: открыть камеру сторис, дальше человек выбирает
+   только что сохранённое фото сам. */
+function openInstagram(storyCamera) {
+  var deep = storyCamera ? 'instagram://story-camera' : 'instagram://user?username=' + INSTA;
+  var fallback = INSTA_URL;
+  var t0 = Date.now();
+  try { window.location.href = deep; } catch (e) {}
+  setTimeout(function () {
+    if (Date.now() - t0 < 1600) {            /* приложение не открылось */
+      if (TG && TG.openLink) TG.openLink(fallback); else window.open(fallback, '_blank');
+    }
+  }, 1200);
+}
+
+function saveResult() {
+  var name = 'zhez-kempir-' + stats.score + '.png';
+  function viaShare(blob) {
+    try {
+      var file = new File([blob], name, { type: 'image/png' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        navigator.share({ files: [file], title: 'Побег от Жез Кемпир', text: shareText() })
+          .catch(function () {});
+        return true;
+      }
+    } catch (e) {}
+    return false;
+  }
+  function viaDownload(blob) {
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 8000);
+  }
+  if (posterBlob) { if (!viaShare(posterBlob)) viaDownload(posterBlob); return; }
+  buildShareImage().toBlob(function (b) {
+    if (!b) return;
+    posterBlob = b;
+    if (!viaShare(b)) viaDownload(b);
+  }, 'image/png');
+}
+
+/* ---------- снег ---------- */
+function makeSnow() {
+  var box = $('#snow'), frag = document.createDocumentFragment();
+  for (var i = 0; i < 18; i++) {
+    var f = document.createElement('i');
+    f.className = 'flake';
+    var s = 1.5 + Math.random() * 3.5;
+    f.style.width = s + 'px'; f.style.height = s + 'px';
+    f.style.left = (Math.random() * 100) + '%';
+    f.style.setProperty('--dx', (Math.random() * 80 - 40) + 'px');
+    f.style.animationDuration = (6 + Math.random() * 9) + 's';
+    f.style.animationDelay = (-Math.random() * 12) + 's';
+    f.style.opacity = 0.25 + Math.random() * 0.5;
+    frag.appendChild(f);
+  }
+  box.appendChild(frag);
+}
+
+/* ---------- инициализация ---------- */
+function init() {
+  stageEl = $('#stage'); boardEl = $('#board'); bgEl = $('#stage-bg');
+  witchEl = $('#witch'); childEl = $('#child');
+  buildBoardDOM(); makeSnow();
+
+  if (window.PointerEvent) {
+    boardEl.addEventListener('pointerdown', onDown);
+    window.addEventListener('pointerup', onUp);
+  } else {
+    boardEl.addEventListener('touchstart', onDown, { passive: true });
+    window.addEventListener('touchend', onUp, { passive: true });
+    boardEl.addEventListener('mousedown', onDown);
+    window.addEventListener('mouseup', onUp);
+  }
+  document.addEventListener('pointerdown', function () { ensureAudio(); startMusic(); });
+
+  Array.prototype.forEach.call(document.querySelectorAll('.pick'), function (b) {
+    b.addEventListener('click', function () {
+      Array.prototype.forEach.call(document.querySelectorAll('.pick'),
+        function (x) { x.classList.remove('selected'); });
+      b.classList.add('selected'); hero = b.dataset.hero; loadCaught(hero);
+    });
+  });
+  $('#btn-run').addEventListener('click', startRun);
+  $('#btn-again').addEventListener('click', function () { show('scr-menu'); state = 'menu'; });
+  $('#btn-close').addEventListener('click', function () {
+    if (state === 'play' || state === 'pause') endRun('quit');
+  });
+  $('#btn-sound').addEventListener('click', function () {
+    muted = !muted;
+    this.classList.toggle('off', muted);
+    this.innerHTML = muted ? ICON_MUTE : ICON_SOUND;
+    if (muted) { musicOn = false; music.pause(); } else startMusic();
+  });
+
+  /* --- экраны, открывающиеся поверх результата --- */
+  var prevScreen = 'scr-over';
+  function openSheet(id) {
+    prevScreen = document.querySelector('#scr-menu.active') ? 'scr-menu' : 'scr-over';
+    show(id);
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('[data-back]'), function (b) {
+    b.addEventListener('click', function () { show(prevScreen); });
+  });
+
+  function openTrailer() {
+    if (TG && TG.openLink) TG.openLink(TRAILER_URL); else window.open(TRAILER_URL, '_blank');
+  }
+  $('#m-trailer').addEventListener('click', openTrailer);
+  $('#o-trailer').addEventListener('click', openTrailer);
+  $('#m-tickets').addEventListener('click', function () { openSheet('scr-tickets'); });
+  $('#o-tickets').addEventListener('click', function () { openSheet('scr-tickets'); });
+  $('#m-insta').addEventListener('click', function () { openInstagram(false); });
+  $('#btn-insta').addEventListener('click', function () { openInstagram(false); });
+  $('#btn-contest').addEventListener('click', function () { openSheet('scr-contest'); });
+  $('#c-save').addEventListener('click', saveResult);
+  $('#c-insta').addEventListener('click', function () { openInstagram(true); });
+
+  /* --- выбор языка --- */
+  Array.prototype.forEach.call(document.querySelectorAll('.lang'), function (b) {
+    b.addEventListener('click', function () { setLang(b.getAttribute('data-lang')); });
+  });
+  $('#btn-tg').addEventListener('click', function () {
+    var link = 'https://t.me/share/url?url=' + encodeURIComponent(GAME_URL) +
+      '&text=' + encodeURIComponent(shareText());
+    if (TG && TG.openTelegramLink) TG.openTelegramLink(link);
+    else window.open(link, '_blank');
+  });
+  $('#btn-copy').addEventListener('click', function () {
+    var txt = shareText(), self = this, lab = self.querySelector('i'), was = lab.innerHTML;
+    function done() { lab.innerHTML = 'СКОПИРОВАНО'; setTimeout(function () { lab.innerHTML = was; }, 1500); }
+    function fallback() {
+      var ta = document.createElement('textarea');
+      ta.value = txt; document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); } catch (e) {}
+      ta.remove(); done();
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText)
+      navigator.clipboard.writeText(txt).then(done, fallback);
+    else fallback();
+  });
+
+  function onResize() {
+    if (!cellEls.length) return;
+    layout();
+    if (state === 'play' || state === 'pause') {
+      buildRoad();
+      var cc = cellCenter(child.r, child.c); child.x = cc.x; child.y = cc.y; child.nr = null;
+      if (witch.phase === 'hunt') {
+        var wc = cellCenter(witch.r, witch.c); witch.x = wc.x; witch.y = wc.y; witch.nr = null;
+      }
+    }
+  }
+  window.addEventListener('resize', onResize);
+  window.addEventListener('orientationchange', function () { setTimeout(onResize, 250); });
+  if (TG && TG.onEvent) { try { TG.onEvent('viewportChanged', onResize); } catch (e) {} }
+
+  requestAnimationFrame(loop);
+  setInterval(watchdog, 33);
+
+  preload(function (p) {
+    $('#loadfill').style.width = Math.round(p * 100) + '%';
+    $('#loadpct').textContent = Math.round(p * 100) + '%';
+  }).then(function () {
+    state = 'menu'; setLang(detectLang()); show('scr-menu');
+    /* всё тяжёлое, что не нужно в первую секунду, догружаем фоном */
+    $('#catch-face').src = SCARE_SRC;
+    loadCaught(hero);
+    music.preload = 'auto';
+    try { music.load(); } catch (e) {}
+  });
+}
+
+/* Тестовая поверхность. Включается только адресом ?dev=1 и отдаёт КОПИИ:
+   счёт и уровень изменить отсюда нельзя — они остаются внутри замыкания,
+   иначе результат конкурса подделывался бы одной строкой в консоли. */
+if (/[?&]dev=1(&|$)/.test(location.search)) {
+  window.__JK = {
+    get board() { return board.map(function (r) { return r.slice(); }); },
+    get stats() { return JSON.parse(JSON.stringify(stats)); },
+    get M() { return JSON.parse(JSON.stringify(M)); },
+    get child() { return JSON.parse(JSON.stringify(child)); },
+    get witch() { return JSON.parse(JSON.stringify(witch)); },
+    get state() { return state; }, get level() { return level; },
+    get busy() { return busy; }, get hintT() { return hintT; },
+    findMatches: findMatches, findMove: findMove, tryMove: tryMove,
+    resultCode: resultCode, buildShareImage: buildShareImage,
+    step: function (dtSec) { last = performance.now() - dtSec * 1000; frame(performance.now()); }
+  };
+}
+
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+else init();
+
+})();
+</script>
+</body>
+</html>
