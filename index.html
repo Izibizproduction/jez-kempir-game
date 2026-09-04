@@ -341,6 +341,16 @@ button,a{touch-action:manipulation}
 .btn-ghost:active{background:rgba(171,0,0,.14);box-shadow:none;transform:translateY(2px)}
 #scr-contest .btn-main,#scr-tickets .btn-main{width:100%;max-width:330px}
 
+.country{width:100%;max-width:340px}
+.country h3{font-size:11px;letter-spacing:.26em;color:var(--dim);
+  margin:6px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--hairline)}
+.search{
+  width:100%;max-width:340px;margin-bottom:14px;padding:11px 13px;
+  border:1px solid var(--hairline);border-radius:11px;
+  background:rgba(7,15,23,.9);color:var(--ink);font:inherit;font-size:13px
+}
+.search:focus{outline:none;border-color:var(--blood)}
+.nothing{max-width:340px;text-align:center;color:var(--dim);font-size:12px;padding:18px 0}
 .city{width:100%;max-width:340px;margin-bottom:16px}
 .city h4{font-size:13px;letter-spacing:.16em;color:var(--blood-hot);margin-bottom:7px}
 .cgroup{font-size:11px;letter-spacing:.14em;color:var(--dim);margin:9px 0 5px}
@@ -528,6 +538,7 @@ button,a{touch-action:manipulation}
     </div>
     <div class="sheet-body">
       <div class="countdown big" data-i18n="countdown"></div>
+      <input id="cinema-search" class="search" type="search" autocomplete="off">
       <div id="cinema-list"></div>
       <div class="rules" data-i18n="tickets_note"></div>
     </div>
@@ -615,14 +626,16 @@ var I18N = {
     code_label: 'КОД РЕЗУЛЬТАТА',
     contest_title: 'РОЗЫГРЫШ',
     prize_name: 'ТРИ БИЛЕТА НА ЗАКРЫТЫЙ ПОКАЗ',
-    prize_sub: 'Приём заявок с 8 по 15 сентября',
+    prize_sub: 'Приём заявок с 8 по 14 сентября',
     step1: 'Сохрани картинку с результатом',
     step2: 'Выложи её в сторис Instagram и отметь @jez_kempir_film',
     step3: 'Подпишись на аккаунт — так мы напишем победителю',
     save_img: 'СОХРАНИТЬ КАРТИНКУ', open_insta: 'ОТКРЫТЬ INSTAGRAM',
-    rules: 'Заявки принимаем с 8 по 15 сентября. Итоги 15 сентября в 20:00: три лучших результата получают по билету на закрытый показ. Сторис должна быть открытой. Код результата на картинке подтверждает счёт — при равенстве очков победит тот, кто выложил раньше. Фильм 18+, приз вручается совершеннолетним.',
+    rules: 'Заявки принимаем с 8 по 14 сентября. Итоги 14 сентября в 20:00: три лучших результата получают по билету на закрытый показ. Сторис должна быть открытой. Код результата на картинке подтверждает счёт — при равенстве очков победит тот, кто выложил раньше. Фильм 18+, приз вручается совершеннолетним.',
     tickets_title: 'ГДЕ СМОТРЕТЬ', tickets_online: 'Купить онлайн',
     tickets_offline: 'Билеты в кассах кинотеатра',
+    tickets_find: 'Найти свой город',
+    tickets_none: 'Ничего не нашлось. Проверьте название города.',
     tickets_note: 'Список кинотеатров пополняется. Если вашего города пока нет — следите за обновлениями в Instagram.',
     countdown_pre: 'ДО ПРЕМЬЕРЫ', countdown_days: ['ДЕНЬ', 'ДНЯ', 'ДНЕЙ'],
     countdown_today: 'ПРЕМЬЕРА СЕГОДНЯ', countdown_now: 'УЖЕ В КИНО',
@@ -648,14 +661,16 @@ var I18N = {
     code_label: 'ЖЫЙЫНТЫК КОДУ',
     contest_title: 'КОНКУРС',
     prize_name: 'ЖАБЫК КӨРСӨТҮҮГӨ ҮЧ БИЛЕТ',
-    prize_sub: '8-15-сентябрь аралыгында катышыңыз',
+    prize_sub: '8-14-сентябрь аралыгында катышыңыз',
     step1: 'Жыйынтык сүрөтүн сактап ал',
     step2: 'Аны Instagram сторисине жайгаштырып, @jez_kempir_film белгиле',
     step3: 'Аккаунтка жазыл — жеңүүчүгө ошондон жазабыз',
     save_img: 'СҮРӨТТҮ САКТОО', open_insta: 'INSTAGRAM АЧУУ',
-    rules: 'Табыштамалар 8-сентябрдан 15-сентябрга чейин кабыл алынат. Жыйынтык 15-сентябрда саат 20:00дө: эң мыкты үч жыйынтык жабык көрсөтүүгө билет алат. Сторис ачык болушу керек. Сүрөттөгү код упайды ырастайт — упай тең болсо, эрте жайгаштырган жеңет. Тасма 18+, байгени бойго жеткендер алат.',
+    rules: 'Табыштамалар 8-сентябрдан 14-сентябрга чейин кабыл алынат. Жыйынтык 14-сентябрда саат 20:00дө: эң мыкты үч жыйынтык жабык көрсөтүүгө билет алат. Сторис ачык болушу керек. Сүрөттөгү код упайды ырастайт — упай тең болсо, эрте жайгаштырган жеңет. Тасма 18+, байгени бойго жеткендер алат.',
     tickets_title: 'КАЙДА КӨРҮҮ', tickets_online: 'Онлайн сатып алуу',
     tickets_offline: 'Кассадан билет',
+    tickets_find: 'Шаарыңызды табыңыз',
+    tickets_none: 'Эч нерсе табылган жок. Шаардын атын текшериңиз.',
     tickets_note: 'Кинотеатрлардын тизмеси толукталууда. Шаарыңыз жок болсо — Instagram аккаунтубузду ээрчиңиз.',
     countdown_pre: 'ПРЕМЬЕРАГА', countdown_days: ['КҮН', 'КҮН', 'КҮН'],
     countdown_today: 'ПРЕМЬЕРА БҮГҮН', countdown_now: 'КИНОТЕАТРЛАРДА',
@@ -701,6 +716,8 @@ function setLang(v) {
     b.classList.toggle('on', b.getAttribute('data-lang') === lang);
   });
   renderCinemas();
+  var sf = document.getElementById('cinema-search');
+  if (sf) sf.placeholder = tr('tickets_find');
 }
 
 /* ---------- обратный отсчёт до премьеры ---------- */
@@ -725,37 +742,102 @@ function countdownText() {
 /* ---------- кинотеатры ----------------------------------------------------
    ЗАГЛУШКА. Замените на реальные залы и ссылки, когда откроются продажи.
    online — со ссылкой на страницу фильма, offline — только касса.        */
+/* ---------- кинотеатры ----------------------------------------------------
+   Список заполняется в файле КИНОТЕАТРЫ.xlsx и переносится сюда командой
+   python tools\import_cinemas.py — руками этот массив править не нужно.
+   Формат: страна → город → залы. Если у зала есть ссылка, он показывается
+   как «купить онлайн», если нет — как «билеты в кассе».                  */
 var CINEMAS = [
-  { city: 'Бишкек',
-    online: [
-      { name: 'Cinematica — Vefa Center', url: 'https://example.kg/cinematica-vefa' },
-      { name: 'Cinematica — Bishkek Park', url: 'https://example.kg/cinematica-park' },
-      { name: 'Кинотеатр «Ала-Тоо»', url: 'https://example.kg/ala-too' }
-    ],
-    offline: ['Кинотеатр «Октябрь»', 'Кинотеатр «Россия»'] },
-  { city: 'Ош', online: [], offline: ['Кинотеатр «Ош»'] }
-];
-function renderCinemas() {
+    {
+      "country": "Кыргызстан",
+      "cities": [
+        {
+          "city": "Бишкек",
+          "halls": [
+            {
+              "name": "Cinematica — Vefa Center",
+              "url": "https://cinematica.kg/film/jez-kempir"
+            },
+            {
+              "name": "Кинотеатр «Ала-Тоо»",
+              "url": ""
+            }
+          ]
+        },
+        {
+          "city": "Ош",
+          "halls": [
+            {
+              "name": "Кинотеатр «Ош»",
+              "url": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "country": "Россия",
+      "cities": [
+        {
+          "city": "Москва",
+          "halls": [
+            {
+              "name": "Каро 11 Октябрь",
+              "url": "https://karofilm.ru/film/jez-kempir"
+            }
+          ]
+        }
+      ]
+    }
+  ];
+
+function esc(t) {
+  return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                  .replace(/"/g, '&quot;');
+}
+
+function renderCinemas(filter) {
   var box = document.getElementById('cinema-list');
   if (!box) return;
-  var html = '';
-  CINEMAS.forEach(function (c) {
-    html += '<div class="city"><h4>' + c.city + '</h4>';
-    if (c.online && c.online.length) {
-      html += '<div class="cgroup">' + tr('tickets_online') + '</div>';
-      c.online.forEach(function (o) {
-        html += '<a class="cin online" href="' + o.url + '" target="_blank" rel="noopener">' +
-                o.name + '<i>&rarr;</i></a>';
+  var q = (filter || '').trim().toLowerCase();
+  var html = '', shown = 0;
+
+  CINEMAS.forEach(function (co) {
+    var cityHtml = '';
+    (co.cities || []).forEach(function (c) {
+      var halls = (c.halls || []).filter(function (h) {
+        if (!q) return true;
+        return (c.city + ' ' + h.name + ' ' + co.country).toLowerCase().indexOf(q) >= 0;
       });
+      if (!halls.length) return;
+      shown += halls.length;
+      var online = halls.filter(function (h) { return h.url; });
+      var offline = halls.filter(function (h) { return !h.url; });
+      cityHtml += '<div class="city"><h4>' + esc(c.city) + '</h4>';
+      if (online.length) {
+        cityHtml += '<div class="cgroup">' + tr('tickets_online') + '</div>';
+        online.forEach(function (h) {
+          cityHtml += '<a class="cin online" href="' + esc(h.url) + '" target="_blank" ' +
+                      'rel="noopener">' + esc(h.name) + '<i>&rarr;</i></a>';
+        });
+      }
+      if (offline.length) {
+        cityHtml += '<div class="cgroup">' + tr('tickets_offline') + '</div>';
+        offline.forEach(function (h) {
+          cityHtml += '<div class="cin">' + esc(h.name) + '</div>';
+        });
+      }
+      cityHtml += '</div>';
+    });
+    if (cityHtml) {
+      html += '<div class="country"><h3>' + esc(co.country) + '</h3>' + cityHtml + '</div>';
     }
-    if (c.offline && c.offline.length) {
-      html += '<div class="cgroup">' + tr('tickets_offline') + '</div>';
-      c.offline.forEach(function (o) { html += '<div class="cin">' + o + '</div>'; });
-    }
-    html += '</div>';
   });
+
+  if (!shown) html = '<div class="nothing">' + tr('tickets_none') + '</div>';
   box.innerHTML = html;
 }
+
 
 var TG = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : null;
 if (TG) {
@@ -1992,6 +2074,7 @@ function init() {
   $('#btn-contest').addEventListener('click', function () { openSheet('scr-contest'); });
   $('#c-save').addEventListener('click', saveResult);
   $('#c-insta').addEventListener('click', function () { openInstagram(true); });
+  $('#cinema-search').addEventListener('input', function () { renderCinemas(this.value); });
 
   /* --- выбор языка --- */
   Array.prototype.forEach.call(document.querySelectorAll('.lang'), function (b) {
