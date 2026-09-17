@@ -633,6 +633,7 @@ var I18N = {
     save_img: 'СОХРАНИТЬ КАРТИНКУ', open_insta: 'ОТКРЫТЬ INSTAGRAM',
     rules: 'Заявки принимаем с 8 по 14 сентября. Итоги 14 сентября в 20:00: три лучших результата получают по билету на закрытый показ. Сторис должна быть открытой. Код результата на картинке подтверждает счёт — при равенстве очков победит тот, кто выложил раньше. Фильм 18+, приз вручается совершеннолетним.',
     tickets_title: 'ГДЕ СМОТРЕТЬ', tickets_online: 'Купить онлайн',
+    tickets_wa: 'Забронировать по WhatsApp',
     tickets_offline: 'Билеты в кассах кинотеатра',
     tickets_find: 'Найти свой город',
     tickets_none: 'Ничего не нашлось. Проверьте название города.',
@@ -668,6 +669,7 @@ var I18N = {
     save_img: 'СҮРӨТТҮ САКТОО', open_insta: 'INSTAGRAM АЧУУ',
     rules: 'Табыштамалар 8-сентябрдан 14-сентябрга чейин кабыл алынат. Жыйынтык 14-сентябрда саат 20:00дө: эң мыкты үч жыйынтык жабык көрсөтүүгө билет алат. Сторис ачык болушу керек. Сүрөттөгү код упайды ырастайт — упай тең болсо, эрте жайгаштырган жеңет. Тасма 18+, байгени бойго жеткендер алат.',
     tickets_title: 'КАЙДА КӨРҮҮ', tickets_online: 'Онлайн сатып алуу',
+    tickets_wa: 'WhatsApp аркылуу брондоо',
     tickets_offline: 'Кассадан билет',
     tickets_find: 'Шаарыңызды табыңыз',
     tickets_none: 'Эч нерсе табылган жок. Шаардын атын текшериңиз.',
@@ -740,56 +742,92 @@ function countdownText() {
 }
 
 /* ---------- кинотеатры ----------------------------------------------------
-   ЗАГЛУШКА. Замените на реальные залы и ссылки, когда откроются продажи.
-   online — со ссылкой на страницу фильма, offline — только касса.        */
-/* ---------- кинотеатры ----------------------------------------------------
-   Список заполняется в файле КИНОТЕАТРЫ.xlsx и переносится сюда командой
-   python tools\import_cinemas.py — руками этот массив править не нужно.
-   Формат: страна → город → залы. Если у зала есть ссылка, он показывается
-   как «купить онлайн», если нет — как «билеты в кассе».                  */
+   Список собран из файла КИНОТЕАТРЫ.xlsx (сентябрь 2026) и ссылок на
+   страницы фильма на сайтах кинотеатров. Формат: страна → город → залы.
+   kind у зала: 'online' — прямая ссылка на покупку билета,
+                'wa'     — бронь по WhatsApp,
+                'box'    — только касса (ссылка не обязательна).
+   Если kind не указан, зал со ссылкой считается онлайновым, без — кассовым. */
 var CINEMAS = [
-    {
-      "country": "Кыргызстан",
-      "cities": [
-        {
-          "city": "Бишкек",
-          "halls": [
-            {
-              "name": "Cinematica — Vefa Center",
-              "url": "https://cinematica.kg/film/jez-kempir"
-            },
-            {
-              "name": "Кинотеатр «Ала-Тоо»",
-              "url": ""
-            }
-          ]
-        },
-        {
-          "city": "Ош",
-          "halls": [
-            {
-              "name": "Кинотеатр «Ош»",
-              "url": ""
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "country": "Россия",
-      "cities": [
-        {
-          "city": "Москва",
-          "halls": [
-            {
-              "name": "Каро 11 Октябрь",
-              "url": "https://karofilm.ru/film/jez-kempir"
-            }
-          ]
-        }
-      ]
-    }
-  ];
+  {
+    "country": "Кыргызстан",
+    "cities": [
+      {
+        "city": "Бишкек",
+        "halls": [
+          { "name": "Синематика — все залы", "kind": "online",
+            "url": "https://cinematica.kg/movies/3251" },
+          { "name": "Бродвей — Азия Молл", "kind": "online",
+            "url": "https://broadway.kg/events/zhez-kempir-2026?date=2026/09/17&facility=broadway" },
+          { "name": "ЦУМ Синема", "kind": "online",
+            "url": "https://tsumcinema.kg/events/zhez-kempir-2026" },
+          { "name": "Кинотеатр «Ала-Тоо»", "kind": "online",
+            "url": "https://alatoocinema.com/details/162" },
+          { "name": "Кинотеатр «Манас»", "kind": "online",
+            "url": "https://manascinema.com/details/506" },
+          { "name": "Кинотеатр «Джал»", "kind": "wa",
+            "url": "https://wa.me/996705133000" }
+        ]
+      },
+      {
+        "city": "Ош",
+        "halls": [
+          { "name": "Galaxy Cinema", "kind": "online",
+            "url": "https://oshcinema.kg/events/zhez-kempir-2026?facility=galaxy-cinema" },
+          { "name": "Нур Синема", "kind": "online",
+            "url": "https://www.nurcinema.kg/release/17.09.2026/404" },
+          { "name": "Кинобокс «Семетей»", "kind": "online",
+            "url": "http://www.kinobox.kg/films/2244" }
+        ]
+      },
+      {
+        "city": "Манас",
+        "halls": [
+          { "name": "Galaxy Cinema", "kind": "online",
+            "url": "https://galaxycinema.kg/events/zhez-kempir-2026" }
+        ]
+      },
+      { "city": "Токтогул", "halls": [
+          { "name": "Токтогул Синема", "kind": "wa", "url": "https://wa.me/996503337337" } ] },
+      { "city": "Кербен", "halls": [
+          { "name": "Кинотеатр «Кербен»", "kind": "wa", "url": "https://wa.me/996226444888" } ] },
+      { "city": "Кочкор-Ата", "halls": [
+          { "name": "Кинотеатр «Кочкор-Ата»", "kind": "wa", "url": "https://wa.me/996220217217" } ] },
+      { "city": "Кызыл-Кыя", "halls": [
+          { "name": "Кызыл-Кыя Синема", "kind": "wa", "url": "https://wa.me/996776771619" },
+          { "name": "Кызыл-Кыя «Байэл»", "kind": "wa", "url": "https://wa.me/996553950795" } ] },
+      { "city": "Кызыл-Адыр", "halls": [
+          { "name": "«Айтматов-Семетей»", "kind": "wa", "url": "https://wa.me/996508071077" } ] },
+      { "city": "Талас", "halls": [
+          { "name": "«Кырк-Чоро»", "kind": "wa", "url": "https://wa.me/996779602178" } ] },
+      { "city": "Каракол", "halls": [
+          { "name": "«Ысык-Көл»", "kind": "wa", "url": "https://wa.me/996223444888" } ] },
+      { "city": "Тюп", "halls": [
+          { "name": "«Жаз»", "kind": "wa", "url": "https://wa.me/996221444888" } ] },
+      { "city": "Кара-Балта", "halls": [
+          { "name": "«Жаштык»", "kind": "wa", "url": "https://wa.me/996702444888" } ] },
+      { "city": "Токмок", "halls": [
+          { "name": "«Космос»", "kind": "wa", "url": "https://wa.me/996504444222" },
+          { "name": "Star Cinema", "kind": "wa", "url": "https://wa.me/996557513053" } ] },
+      { "city": "Нарын", "halls": [
+          { "name": "«Универ»", "kind": "wa", "url": "https://wa.me/996501487877" } ] }
+    ]
+  },
+  {
+    "country": "Россия",
+    "cities": [
+      {
+        "city": "Москва",
+        "halls": [
+          { "name": "Кинотеатр «Манас» (ш. Энтузиастов)", "kind": "box",
+            "url": "https://www.instagram.com/kinoteatrmanas/" },
+          { "name": "Кинотеатр «Манас 2 KG»", "kind": "box",
+            "url": "https://www.instagram.com/kinoteatrmanas/" }
+        ]
+      }
+    ]
+  }
+];
 
 function esc(t) {
   return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -811,22 +849,22 @@ function renderCinemas(filter) {
       });
       if (!halls.length) return;
       shown += halls.length;
-      var online = halls.filter(function (h) { return h.url; });
-      var offline = halls.filter(function (h) { return !h.url; });
+      var kindOf = function (h) { return h.kind || (h.url ? 'online' : 'box'); };
       cityHtml += '<div class="city"><h4>' + esc(c.city) + '</h4>';
-      if (online.length) {
-        cityHtml += '<div class="cgroup">' + tr('tickets_online') + '</div>';
-        online.forEach(function (h) {
-          cityHtml += '<a class="cin online" href="' + esc(h.url) + '" target="_blank" ' +
-                      'rel="noopener">' + esc(h.name) + '<i>&rarr;</i></a>';
+      [['online', 'tickets_online'], ['wa', 'tickets_wa'], ['box', 'tickets_offline']]
+        .forEach(function (g) {
+          var list = halls.filter(function (h) { return kindOf(h) === g[0]; });
+          if (!list.length) return;
+          cityHtml += '<div class="cgroup">' + tr(g[1]) + '</div>';
+          list.forEach(function (h) {
+            if (h.url) {
+              cityHtml += '<a class="cin online" href="' + esc(h.url) + '" target="_blank" ' +
+                          'rel="noopener">' + esc(h.name) + '<i>&rarr;</i></a>';
+            } else {
+              cityHtml += '<div class="cin">' + esc(h.name) + '</div>';
+            }
+          });
         });
-      }
-      if (offline.length) {
-        cityHtml += '<div class="cgroup">' + tr('tickets_offline') + '</div>';
-        offline.forEach(function (h) {
-          cityHtml += '<div class="cin">' + esc(h.name) + '</div>';
-        });
-      }
       cityHtml += '</div>';
     });
     if (cityHtml) {
