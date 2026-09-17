@@ -344,24 +344,22 @@ button,a{touch-action:manipulation}
 .country{width:100%;max-width:340px}
 .country h3{font-size:11px;letter-spacing:.26em;color:var(--dim);
   margin:6px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--hairline)}
-.search{
-  width:100%;max-width:340px;margin-bottom:14px;padding:11px 13px;
-  border:1px solid var(--hairline);border-radius:11px;
-  background:rgba(7,15,23,.9);color:var(--ink);font:inherit;font-size:13px
-}
-.search:focus{outline:none;border-color:var(--blood)}
-.nothing{max-width:340px;text-align:center;color:var(--dim);font-size:12px;padding:18px 0}
 .city{width:100%;max-width:340px;margin-bottom:16px}
 .city h4{font-size:13px;letter-spacing:.16em;color:var(--blood-hot);margin-bottom:7px}
-.cgroup{font-size:11px;letter-spacing:.14em;color:var(--dim);margin:9px 0 5px}
 .cin{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:10px 12px;margin-bottom:6px;border-radius:10px;
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding:12px;margin-bottom:6px;border-radius:10px;
   background:rgba(19,27,38,.85);border:1px solid #22303f;
   font-size:12.5px;color:var(--dim);text-decoration:none
 }
+.cin span{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
 .cin.online{color:var(--ink);border-color:#2b3c52}
+.cin.online:active{border-color:var(--blood);background:rgba(28,38,52,.95)}
 .cin i{font-style:normal;color:var(--blood-hot)}
+.cin .tag{
+  font-weight:400;font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--dim);border:1px solid var(--hairline);border-radius:20px;padding:1px 6px
+}
 
 .age{
   flex:0 0 auto;margin-top:8px;padding:2px 9px;border-radius:20px;
@@ -538,7 +536,6 @@ button,a{touch-action:manipulation}
     </div>
     <div class="sheet-body">
       <div class="countdown big" data-i18n="countdown"></div>
-      <input id="cinema-search" class="search" type="search" autocomplete="off">
       <div id="cinema-list"></div>
       <div class="rules" data-i18n="tickets_note"></div>
     </div>
@@ -632,11 +629,8 @@ var I18N = {
     step3: 'Подпишись на аккаунт — так мы напишем победителю',
     save_img: 'СОХРАНИТЬ КАРТИНКУ', open_insta: 'ОТКРЫТЬ INSTAGRAM',
     rules: 'Заявки принимаем с 8 по 14 сентября. Итоги 14 сентября в 20:00: три лучших результата получают по билету на закрытый показ. Сторис должна быть открытой. Код результата на картинке подтверждает счёт — при равенстве очков победит тот, кто выложил раньше. Фильм 18+, приз вручается совершеннолетним.',
-    tickets_title: 'ГДЕ СМОТРЕТЬ', tickets_online: 'Купить онлайн',
-    tickets_wa: 'Забронировать по WhatsApp',
-    tickets_offline: 'Билеты в кассах кинотеатра',
-    tickets_find: 'Найти свой город',
-    tickets_none: 'Ничего не нашлось. Проверьте название города.',
+    tickets_title: 'ГДЕ СМОТРЕТЬ',
+    tag_wa: 'WhatsApp', tag_box: 'касса',
     tickets_note: 'Список кинотеатров пополняется. Если вашего города пока нет — следите за обновлениями в Instagram.',
     countdown_pre: 'ДО ПРЕМЬЕРЫ', countdown_days: ['ДЕНЬ', 'ДНЯ', 'ДНЕЙ'],
     countdown_today: 'ПРЕМЬЕРА СЕГОДНЯ', countdown_now: 'УЖЕ В КИНО',
@@ -668,11 +662,8 @@ var I18N = {
     step3: 'Аккаунтка жазыл — жеңүүчүгө ошондон жазабыз',
     save_img: 'СҮРӨТТҮ САКТОО', open_insta: 'INSTAGRAM АЧУУ',
     rules: 'Табыштамалар 8-сентябрдан 14-сентябрга чейин кабыл алынат. Жыйынтык 14-сентябрда саат 20:00дө: эң мыкты үч жыйынтык жабык көрсөтүүгө билет алат. Сторис ачык болушу керек. Сүрөттөгү код упайды ырастайт — упай тең болсо, эрте жайгаштырган жеңет. Тасма 18+, байгени бойго жеткендер алат.',
-    tickets_title: 'КАЙДА КӨРҮҮ', tickets_online: 'Онлайн сатып алуу',
-    tickets_wa: 'WhatsApp аркылуу брондоо',
-    tickets_offline: 'Кассадан билет',
-    tickets_find: 'Шаарыңызды табыңыз',
-    tickets_none: 'Эч нерсе табылган жок. Шаардын атын текшериңиз.',
+    tickets_title: 'КАЙДА КӨРҮҮ',
+    tag_wa: 'WhatsApp', tag_box: 'касса',
     tickets_note: 'Кинотеатрлардын тизмеси толукталууда. Шаарыңыз жок болсо — Instagram аккаунтубузду ээрчиңиз.',
     countdown_pre: 'ПРЕМЬЕРАГА', countdown_days: ['КҮН', 'КҮН', 'КҮН'],
     countdown_today: 'ПРЕМЬЕРА БҮГҮН', countdown_now: 'КИНОТЕАТРЛАРДА',
@@ -718,8 +709,6 @@ function setLang(v) {
     b.classList.toggle('on', b.getAttribute('data-lang') === lang);
   });
   renderCinemas();
-  var sf = document.getElementById('cinema-search');
-  if (sf) sf.placeholder = tr('tickets_find');
 }
 
 /* ---------- обратный отсчёт до премьеры ---------- */
@@ -834,37 +823,29 @@ function esc(t) {
                   .replace(/"/g, '&quot;');
 }
 
-function renderCinemas(filter) {
+function renderCinemas() {
   var box = document.getElementById('cinema-list');
   if (!box) return;
-  var q = (filter || '').trim().toLowerCase();
-  var html = '', shown = 0;
+  var html = '';
 
   CINEMAS.forEach(function (co) {
     var cityHtml = '';
     (co.cities || []).forEach(function (c) {
-      var halls = (c.halls || []).filter(function (h) {
-        if (!q) return true;
-        return (c.city + ' ' + h.name + ' ' + co.country).toLowerCase().indexOf(q) >= 0;
-      });
+      var halls = c.halls || [];
       if (!halls.length) return;
-      shown += halls.length;
-      var kindOf = function (h) { return h.kind || (h.url ? 'online' : 'box'); };
       cityHtml += '<div class="city"><h4>' + esc(c.city) + '</h4>';
-      [['online', 'tickets_online'], ['wa', 'tickets_wa'], ['box', 'tickets_offline']]
-        .forEach(function (g) {
-          var list = halls.filter(function (h) { return kindOf(h) === g[0]; });
-          if (!list.length) return;
-          cityHtml += '<div class="cgroup">' + tr(g[1]) + '</div>';
-          list.forEach(function (h) {
-            if (h.url) {
-              cityHtml += '<a class="cin online" href="' + esc(h.url) + '" target="_blank" ' +
-                          'rel="noopener">' + esc(h.name) + '<i>&rarr;</i></a>';
-            } else {
-              cityHtml += '<div class="cin">' + esc(h.name) + '</div>';
-            }
-          });
-        });
+      halls.forEach(function (h) {
+        var kind = h.kind || (h.url ? 'online' : 'box');
+        var tag = '';
+        if (kind === 'wa') tag = '<b class="tag wa">' + tr('tag_wa') + '</b>';
+        if (kind === 'box') tag = '<b class="tag">' + tr('tag_box') + '</b>';
+        if (h.url) {
+          cityHtml += '<a class="cin online" href="' + esc(h.url) + '" target="_blank" ' +
+                      'rel="noopener"><span>' + esc(h.name) + tag + '</span><i>&rarr;</i></a>';
+        } else {
+          cityHtml += '<div class="cin"><span>' + esc(h.name) + tag + '</span></div>';
+        }
+      });
       cityHtml += '</div>';
     });
     if (cityHtml) {
@@ -872,10 +853,8 @@ function renderCinemas(filter) {
     }
   });
 
-  if (!shown) html = '<div class="nothing">' + tr('tickets_none') + '</div>';
   box.innerHTML = html;
 }
-
 
 var TG = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : null;
 if (TG) {
@@ -2112,7 +2091,6 @@ function init() {
   $('#btn-contest').addEventListener('click', function () { openSheet('scr-contest'); });
   $('#c-save').addEventListener('click', saveResult);
   $('#c-insta').addEventListener('click', function () { openInstagram(true); });
-  $('#cinema-search').addEventListener('input', function () { renderCinemas(this.value); });
 
   /* --- выбор языка --- */
   Array.prototype.forEach.call(document.querySelectorAll('.lang'), function (b) {
